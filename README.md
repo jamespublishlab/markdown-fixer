@@ -123,6 +123,26 @@ markdown-fixer --help
 
 **Full Guide:** [JetBrains Setup](integrations/jetbrains/SETUP.md)
 
+### Claude Code Integration
+
+**Three Ways to Use:**
+
+1. **Slash Commands** - Quick operations:
+   ```
+   /fix-markdown README.md
+   /fix-all-markdown
+   ```
+
+2. **Skill** - AI-guided workflows:
+   ```
+   "Fix all docs but show me what changes first"
+   "Check which markdown files need fixing"
+   ```
+
+3. **Auto-Fix Hook** - Automatic formatting after edits
+
+**Setup:** See [Claude Code Guide](.claude/README.md)
+
 ## What It Fixes
 
 ### 1. Blank Lines Around Lists
