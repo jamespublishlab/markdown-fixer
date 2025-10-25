@@ -1,0 +1,271 @@
+# Markdown Fixer
+
+[![PyPI version](https://badge.fury.io/py/markdown-fixer.svg)](https://pypi.org/project/markdown-fixer/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/jamespublishlab/markdown-fixer/workflows/Tests/badge.svg)](https://github.com/jamespublishlab/markdown-fixer/actions)
+
+Fix common markdown formatting issues in LLM-generated content with one command.
+
+## The Problem
+
+LLMs like ChatGPT and Claude consistently produce markdown with formatting issues that break rendering:
+
+**Before:**
+```markdown
+# Documentation
+**Purpose:** Guide for developers
+**Status:** Active
+This explains the API.
+- List item 1
+- List item 2
+Next section...
+
+
+Too many blank lines
+```
+
+**After:**
+```markdown
+# Documentation
+
+- **Purpose:** Guide for developers
+- **Status:** Active
+
+This explains the API.
+
+- List item 1
+- List item 2
+
+Next section...
+
+Too many blank lines
+```
+
+## Features
+
+- **Blank lines around lists** - Adds proper spacing
+- **Field metadata conversion** - Converts `**Key:** value` pairs to bullets
+- **Newline normalization** - Collapses 3+ blank lines to 2
+- **Code-block aware** - Never modifies code blocks
+- **Multi-platform** - CLI, macOS Quick Action, drag-drop app, JetBrains plugin
+
+## Installation
+
+### Option 1: Homebrew (macOS, Recommended)
+```bash
+brew tap jamespublishlab/tap
+brew install markdown-fixer
+```
+
+### Option 2: Universal Installer (macOS)
+Installs everything with one command:
+```bash
+curl -sSL https://raw.githubusercontent.com/jamespublishlab/markdown-fixer/main/scripts/install-all.sh | bash
+```
+
+### Option 3: Python Package Only
+```bash
+pipx install markdown-fixer
+```
+
+Or with pip:
+```bash
+pip install markdown-fixer
+```
+
+## Usage
+
+### Command Line
+
+```bash
+# Fix a file (creates file.formatted.md)
+markdown-fixer document.md
+
+# Fix in-place
+markdown-fixer document.md --in-place
+
+# Fix multiple files
+markdown-fixer *.md -i
+
+# Preview changes
+markdown-fixer document.md --dry-run
+
+# Specify output file
+markdown-fixer input.md --output fixed.md
+
+# Show help
+markdown-fixer --help
+```
+
+### macOS Quick Action
+
+1. Right-click any `.md` file in Finder
+2. **Quick Actions** → **Fix Markdown**
+3. File is fixed in-place
+4. Notification confirms completion
+
+**Setup:** See [Quick Action Guide](integrations/macos-quick-action/README.md)
+
+### Mac Drag-and-Drop App
+
+1. Drag one or more `.md` files onto the **Markdown Fixer** app
+2. Files are fixed in-place
+3. Notification shows results
+
+**Download:** Get from [Releases](https://github.com/jamespublishlab/markdown-fixer/releases)
+
+### JetBrains IDEs (PhpStorm, PyCharm, IntelliJ, WebStorm)
+
+**Quick Setup:**
+1. Download [external-tool-config.xml](integrations/jetbrains/external-tool-config.xml)
+2. **Settings** → **Tools** → **External Tools** → Import XML
+3. Right-click `.md` files → **External Tools** → **Fix Markdown**
+
+**Full Guide:** [JetBrains Setup](integrations/jetbrains/SETUP.md)
+
+## What It Fixes
+
+### 1. Blank Lines Around Lists
+
+**Problem:** Lists run into surrounding text
+
+```markdown
+Some text
+- Item 1
+- Item 2
+More text
+```
+
+**Fixed:**
+```markdown
+Some text
+
+- Item 1
+- Item 2
+
+More text
+```
+
+### 2. Field Metadata to Bullets
+
+**Problem:** `**Key:** value` patterns that should be lists
+
+```markdown
+**Author:** James
+**Status:** Complete
+**Updated:** 2025-10-25
+```
+
+**Fixed:**
+```markdown
+- **Author:** James
+- **Status:** Complete
+- **Updated:** 2025-10-25
+```
+
+**Note:** Single fields are preserved as-is (not converted to bullets).
+
+### 3. Excessive Newlines
+
+**Problem:** 3+ consecutive blank lines
+
+```markdown
+Section 1
+
+
+
+Section 2
+```
+
+**Fixed:**
+```markdown
+Section 1
+
+Section 2
+```
+
+### 4. Smart Context Awareness
+
+**Never modifies:**
+- Code blocks (` ```...``` `)
+- Blockquotes
+- Headers
+- Horizontal rules
+
+## Development
+
+### Setup
+
+```bash
+git clone https://github.com/jamespublishlab/markdown-fixer.git
+cd markdown-fixer
+pip install -e ".[dev]"
+```
+
+### Run Tests
+
+```bash
+pytest
+pytest --cov=markdown_fixer --cov-report=html
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/
+
+# Lint
+ruff check src/ tests/
+
+# Type check
+mypy src/
+```
+
+### Build Distributions
+
+```bash
+chmod +x scripts/build-release.sh
+./scripts/build-release.sh
+```
+
+## Architecture
+
+```
+markdown-fixer/
+├── src/markdown_fixer/  # Core Python package
+├── integrations/        # Platform-specific wrappers
+│   ├── macos-quick-action/
+│   ├── macos-app/
+│   └── jetbrains/
+└── scripts/            # Build and install scripts
+```
+
+**Design principle:** Single source of truth for formatting logic, multiple interfaces for different workflows.
+
+## Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass: `pytest`
+5. Submit a pull request
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file.
+
+## Author
+
+**James** - [PublishLab](https://github.com/jamespublishlab)
+
+## Support
+
+- **Issues:** [GitHub Issues](https://github.com/jamespublishlab/markdown-fixer/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/jamespublishlab/markdown-fixer/discussions)
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.

@@ -1,0 +1,26 @@
+<toolSet>
+  <tool name="Fix Markdown Formatting"
+        description="Fix common markdown formatting issues (lists, metadata, newlines)"
+        showInMainMenu="true"
+        showInEditor="true"
+        showInProject="true"
+        showInSearchPopup="true"
+        disabled="false"
+        useConsole="true"
+        showConsoleOnStdOut="false"
+        showConsoleOnStdErr="true"
+        synchronizeAfterRun="true">
+
+    <exec>
+      <option name="COMMAND" value="markdown-fixer" />
+      <option name="PARAMETERS" value="--in-place &quot;$FilePath$&quot;" />
+      <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
+    </exec>
+
+    <filter>
+      <option name="NAME" value="markdown files" />
+      <option name="DESCRIPTION" value="Only show for markdown files" />
+      <option name="REGEXP" value=".*\.md$" />
+    </filter>
+  </tool>
+</toolSet>

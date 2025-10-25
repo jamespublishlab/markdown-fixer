@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build Python package
+      run: python -m build
+
+    - name: Package Quick Action
+      run: |
+        cd integrations/macos-quick-action
+        mkdir -p temp-workflow
+        cp README.md quick-action-script.sh temp-workflow/
+        cd temp-workflow
+        zip -r "../Fix-Markdown.workflow.zip" .
+        cd ..
+        rm -rf temp-workflow
+        mv "Fix-Markdown.workflow.zip" ../../dist/
+
+    - name: Install Platypus (optional - may not be available)
+      continue-on-error: true
+      run: brew install platypus
+
+    - name: Build Mac App (if Platypus available)
+      continue-on-error: true
+      run: |
+        if command -v platypus &> /dev/null; then
+          cd integrations/macos-app
+          chmod +x build-platypus.sh
+          ./build-platypus.sh || echo "Mac app build failed, continuing..."
+          if [ -d "build/Markdown Fixer.app" ]; then
+            cd build
+            zip -r "Markdown-Fixer.app.zip" "Markdown Fixer.app"
+            mv "Markdown-Fixer.app.zip" ../../../dist/
+          fi
+        else
+          echo "Platypus not available, skipping Mac app build"
+        fi
+
+    - name: Generate checksums
+      run: |
+        cd dist
+        shasum -a 256 *.whl *.tar.gz *.zip > SHA256SUMS.txt || true
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/*.whl
+          dist/*.tar.gz
+          dist/*.zip
+          dist/SHA256SUMS.txt
+        draft: true
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish to PyPI
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        if [ -n "$TWINE_PASSWORD" ]; then
+          twine upload dist/*.whl dist/*.tar.gz
+        else
+          echo "PYPI_TOKEN not set, skipping PyPI upload"
+        fi
