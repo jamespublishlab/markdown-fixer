@@ -32,9 +32,16 @@ markdown-fixer/
 │   │   ├── setup-py2app.py          # py2app configuration
 │   │   └── README.md                # App documentation
 │   │
-│   └── macos-quick-action/           # macOS Finder Quick Action
-│       ├── quick-action-script.sh   # Automator script
-│       └── README.md                # Installation guide
+│   ├── macos-quick-action/           # macOS Finder Quick Action
+│   │   ├── quick-action-script.sh   # Automator script
+│   │   └── README.md                # Installation guide
+│   │
+│   └── mcp-server/                   # Claude Desktop MCP server
+│       ├── server.py                 # MCP server implementation
+│       ├── install.sh                # Auto-installer
+│       ├── claude_desktop_config.json # Config template
+│       ├── requirements.txt          # Server dependencies
+│       └── README.md                 # MCP server documentation
 │
 ├── scripts/                          # Build and installation scripts
 │   ├── build-release.sh              # Build all release artifacts
@@ -81,12 +88,13 @@ markdown-fixer/
 - **Tests**: Comprehensive coverage for core and CLI
 
 ### Multi-Platform Support
-Four usage modes, same logic:
+Six usage modes, same logic:
 1. **CLI** - Command-line tool (cross-platform)
 2. **Quick Action** - macOS Finder right-click
 3. **Mac App** - macOS drag-and-drop
 4. **IDE Integration** - JetBrains external tool
 5. **Claude Code** - AI-assisted workflows
+6. **Claude Desktop** - MCP server integration
 
 ## Key Files
 
@@ -152,6 +160,17 @@ mdfixer *.md -i  # Short alias
 "Fix the markdown formatting"
 
 # Auto-fix enabled via hooks
+```
+
+### Claude Desktop (MCP)
+```bash
+# Install
+cd integrations/mcp-server
+./install.sh
+
+# Use: Ask Claude in Claude Desktop
+"Fix this markdown: **Name:** John"
+# Claude uses fix_markdown tool automatically
 ```
 
 ## Testing Strategy

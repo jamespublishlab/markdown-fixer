@@ -143,6 +143,32 @@ markdown-fixer --help
 
 **Setup:** See [Claude Code Guide](.claude/README.md)
 
+### Claude Desktop (MCP Server)
+
+Integrate directly into Claude Desktop via Model Context Protocol!
+
+**Quick Install:**
+```bash
+cd integrations/mcp-server
+./install.sh
+```
+
+**What it does:**
+- Claude can automatically fix markdown you generate
+- Preview changes before applying
+- Fix files on your local system
+- Works seamlessly in conversations and artifacts
+
+**Example:**
+```
+User: "Fix this markdown: **Name:** John **Age:** 30"
+Claude: [uses fix_markdown tool] "Here's the fixed version:
+- **Name:** John
+- **Age:** 30"
+```
+
+**Full Guide:** [MCP Server Setup](integrations/mcp-server/README.md)
+
 ## What It Fixes
 
 ### 1. Blank Lines Around Lists

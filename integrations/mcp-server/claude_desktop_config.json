@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "markdown-fixer": {
+      "command": "python",
+      "args": [
+        "/absolute/path/to/markdown-fixer/integrations/mcp-server/server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/markdown-fixer/src"
+      }
+    }
+  }
+}

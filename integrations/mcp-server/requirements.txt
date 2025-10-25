@@ -1,0 +1,6 @@
+# MCP Server requirements
+# The server needs the markdown-fixer package
+../../.  # Install the parent package in development mode
+
+# Optional: For standalone installation
+# markdown-fixer>=1.0.0
