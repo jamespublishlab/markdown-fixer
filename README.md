@@ -135,7 +135,7 @@ markdown-fixer --help
 
 **Quick Setup:**
 
-1. Download [external-tool-config.xml](integrations/jetbrains/external-tool-config.xml)
+1. Download [markdown-fixer.xml](integrations/jetbrains/markdown-fixer.xml)
 2. **Settings** → **Tools** → **External Tools** → Import XML
 3. Right-click `.md` files → **External Tools** → **Fix Markdown**
 

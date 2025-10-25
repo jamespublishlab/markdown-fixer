@@ -563,7 +563,7 @@ A: No. Everything runs locally on your machine.
 ## See Also
 
 - [Main Project Documentation](../../README.md)
-- [Claude Code Integration](.claude/README.md)
+- [Claude Code Integration](../../.claude/README.md)
 - [Other Integrations](../README.md)
 
 ## License

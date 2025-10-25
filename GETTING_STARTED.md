@@ -135,11 +135,6 @@ cd integrations/macos-quick-action
 **Install:**
 ```bash
 cd integrations/macos-app
-# Option 1: Build with Platypus
-brew install platypus
-./build-platypus.sh
-
-# Option 2: Build with py2app
 pip install py2app
 ./build-py2app.sh
 
@@ -160,7 +155,7 @@ pip install py2app
 
 **Quick Setup:**
 
-1. Download [external-tool-config.xml](integrations/jetbrains/external-tool-config.xml)
+1. Download [markdown-fixer.xml](integrations/jetbrains/markdown-fixer.xml)
 2. Open IDE → **Settings** → **Tools** → **External Tools**
 3. Click gear icon → **Import**
 4. Select the XML file

@@ -26,7 +26,6 @@ markdown-fixer/
 │   │
 │   ├── macos-app/                    # macOS drag-and-drop app
 │   │   ├── app_wrapper.py           # Python wrapper
-│   │   ├── build-platypus.sh        # Platypus build script
 │   │   ├── build-py2app.sh          # py2app build script
 │   │   ├── setup-py2app.py          # py2app configuration
 │   │   └── README.md                # App documentation
@@ -152,7 +151,7 @@ mdfixer *.md -i  # Short alias
 
 ### JetBrains IDE
 ```bash
-# Import external-tool-config.xml
+# Import markdown-fixer.xml
 # Use: Right-click .md file → External Tools → Fix Markdown
 ```
 
