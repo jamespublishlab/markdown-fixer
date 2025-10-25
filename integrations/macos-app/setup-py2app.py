@@ -11,7 +11,9 @@ APP = ['app_wrapper.py']
 DATA_FILES = []
 OPTIONS = {
     'argv_emulation': False,  # We handle file drops manually
-    'iconfile': 'icon.icns',
+    # 'iconfile': 'icon.icns',  # Optional - comment out if icon doesn't exist
+    'packages': ['markdown_fixer', 'click'],
+    'excludes': ['test', 'tests', 'pytest'],
     'plist': {
         'CFBundleName': 'Markdown Fixer',
         'CFBundleDisplayName': 'Markdown Fixer',
@@ -30,7 +32,6 @@ OPTIONS = {
         ],
         'LSMinimumSystemVersion': '10.15.0',
     },
-    'packages': ['markdown_fixer'],
 }
 
 setup(
