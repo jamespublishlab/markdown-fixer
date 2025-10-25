@@ -53,15 +53,18 @@ pipx install markdown-fixer
 ## Usage
 
 ### Via Context Menu
+
 1. Right-click any `.md` file in the editor or project tree
 2. **External Tools** → **Fix Markdown Formatting**
 3. File is fixed in-place
 
 ### Via Keyboard Shortcut
+
 1. Open a `.md` file
 2. Press your assigned shortcut (e.g., `⌘⇧F`)
 
 ### Via Find Action
+
 1. Press `⌘⇧A` (Mac) or `Ctrl+Shift+A` (Windows/Linux)
 2. Type "Fix Markdown"
 3. Select "Fix Markdown Formatting"
@@ -133,6 +136,7 @@ Now markdown files will be automatically fixed when you save!
 ### Changes don't appear immediately
 
 **Solution:** The file should auto-reload. If not:
+
 - **File** → **Synchronize** (or `⌘Y`)
 
 ### File Watcher not triggering
@@ -175,6 +179,7 @@ chmod +x .git/hooks/pre-commit
 4. **OK**
 
 If using File Watcher:
+
 1. **Settings** → **Tools** → **File Watchers**
 2. Select "Markdown Fixer"
 3. Click **-** button

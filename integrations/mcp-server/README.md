@@ -23,6 +23,7 @@ The [Model Context Protocol (MCP)](https://modelcontextprotocol.io) is an open s
 ## Features
 
 Once installed, Claude Desktop can:
+
 - **Automatically fix markdown** you generate in conversations
 - **Fix markdown in artifacts** with a simple request
 - **Preview changes** before applying them
@@ -40,6 +41,7 @@ chmod +x install.sh
 ```
 
 The installer will:
+
 1. Check if Python and markdown-fixer are installed
 2. Install markdown-fixer if needed
 3. Configure Claude Desktop automatically
@@ -126,7 +128,6 @@ User: Can you fix this markdown for me?
 **Status:** Active
 - List item
 More text
-
 
 Too many blank lines
 ```
@@ -224,6 +225,7 @@ cat ~/.config/Claude/claude_desktop_config.json
 ```
 
 **Verify paths:**
+
 - Ensure paths in config are absolute, not relative
 - Check that `server.py` exists at the specified path
 - Verify `PYTHONPATH` points to the `src` directory
@@ -243,6 +245,7 @@ python3 integrations/mcp-server/server.py
 ```
 
 **Check logs:**
+
 - Open Claude Desktop Developer Tools (if available)
 - Look for MCP connection errors
 - Check stderr output
@@ -414,6 +417,7 @@ Fixed Markdown
 ```
 
 The server:
+
 - Runs as a subprocess of Claude Desktop
 - Communicates via JSON-RPC over stdio
 - Calls markdown-fixer's core logic

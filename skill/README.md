@@ -5,6 +5,7 @@ A Claude Code skill that provides markdown formatting capabilities using the mar
 ## What It Does
 
 This skill enables Claude Code to:
+
 - Fix markdown formatting issues automatically
 - Check files for formatting problems
 - Batch-process multiple markdown files
@@ -52,12 +53,14 @@ pipx install markdown-fixer
 Once the skill is available, Claude Code can automatically use markdown-fixer when you:
 
 **Ask directly:**
+
 - "Fix the formatting in README.md"
 - "Clean up all markdown files"
 - "Check if this file needs markdown fixing"
 
 **Get suggestions:**
 Claude Code will proactively suggest fixes when it detects:
+
 - Lists without proper spacing
 - Field metadata that should be bullets
 - Excessive blank lines
@@ -82,6 +85,7 @@ Claude: [runs markdown-fixer README.md --in-place]
 ### Smart Workflows
 
 The skill provides intelligent workflows:
+
 1. **Check first**: Always previews changes with `--dry-run`
 2. **Ask permission**: Requests confirmation before modifying files
 3. **Batch operations**: Can fix multiple files at once
@@ -90,6 +94,7 @@ The skill provides intelligent workflows:
 ### Auto-Installation
 
 If markdown-fixer isn't installed, Claude Code will:
+
 1. Detect the missing utility
 2. Offer to install it
 3. Provide installation instructions
@@ -122,6 +127,7 @@ See `.claude/hooks/user-prompt-submit.sh` for auto-fix on save configuration.
 ### Custom Patterns
 
 The skill uses markdown-fixer defaults, but you can customize by:
+
 - Modifying the core logic in `src/markdown_fixer/core.py`
 - Adding configuration options to the skill file
 
@@ -130,6 +136,7 @@ The skill uses markdown-fixer defaults, but you can customize by:
 ### Skill Not Found
 
 Make sure:
+
 1. The skill file is in a location Claude Code can find
 2. The file has the correct name: `markdown-fixer` (no extension)
 3. Claude Code has been restarted if you just installed it
@@ -169,6 +176,7 @@ The skill file is a plain text prompt that tells Claude Code how to use markdown
 ## Contributing
 
 Improvements to the skill are welcome! Consider:
+
 - Better error handling suggestions
 - Additional workflow patterns
 - Integration with other tools

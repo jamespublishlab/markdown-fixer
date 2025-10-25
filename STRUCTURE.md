@@ -77,11 +77,13 @@ markdown-fixer/
 ## Design Principles
 
 ### Single Source of Truth
+
 - **Core Logic**: All formatting logic lives in `src/markdown_fixer/core.py`
 - **Integrations**: Platform-specific wrappers call the core logic
 - **No Duplication**: Each integration reuses the same formatting engine
 
 ### Modular Architecture
+
 - **Core Package**: Standalone Python package (pip/pipx installable)
 - **Integrations**: Independent, optional platform-specific wrappers
 - **Scripts**: Automation for building and installing
@@ -89,6 +91,7 @@ markdown-fixer/
 
 ### Multi-Platform Support
 Six usage modes, same logic:
+
 1. **CLI** - Command-line tool (cross-platform)
 2. **Quick Action** - macOS Finder right-click
 3. **Mac App** - macOS drag-and-drop
@@ -99,18 +102,21 @@ Six usage modes, same logic:
 ## Key Files
 
 ### Core Implementation
+
 - **`src/markdown_fixer/core.py`**: The heart of the project
   - `MarkdownFixer` class with `fix_string()` and `fix_file()` methods
   - All formatting rules implemented here
   - Well-tested, production-ready
 
 ### CLI Interface
+
 - **`src/markdown_fixer/cli.py`**: Command-line interface
   - Built with Click framework
   - Options: `--in-place`, `--dry-run`, `--output`, `--verbose`
   - Entry point: `markdown-fixer` command
 
 ### Configuration
+
 - **`pyproject.toml`**: Python package metadata
   - Dependencies, scripts, build configuration
   - Test configuration (pytest, coverage)
@@ -176,6 +182,7 @@ cd integrations/mcp-server
 ## Testing Strategy
 
 ### Test Coverage
+
 - **Unit Tests**: `tests/test_core.py` - Core formatting logic
 - **Integration Tests**: `tests/test_cli.py` - CLI interface
 - **Fixtures**: `tests/fixtures/` - Input/expected output pairs
@@ -206,6 +213,7 @@ TestFileOperations      # File I/O operations
 ```
 
 ### Release Process
+
 1. Update version in `src/markdown_fixer/__version__.py`
 2. Update `CHANGELOG.md`
 3. Run `./scripts/build-release.sh`
@@ -239,6 +247,7 @@ mypy src/                       # Type check
 ```
 
 ### Making Changes
+
 1. Create feature branch
 2. Make changes to `src/markdown_fixer/`
 3. Add tests to `tests/`
@@ -265,6 +274,7 @@ mypy src/                       # Type check
 See main [README.md](README.md) for contribution guidelines.
 
 Key points:
+
 - Single source of truth in `core.py`
 - Add tests for new features
 - Follow existing code style

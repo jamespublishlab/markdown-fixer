@@ -41,7 +41,6 @@ This is some text.
 - List item 2
 More text here.
 
-
 Too many blank lines.
 EOF
 ```
@@ -57,6 +56,7 @@ cat test.md
 ```
 
 You should see properly formatted markdown with:
+
 - Blank lines around lists ✅
 - Field metadata converted to bullets ✅
 - Excessive newlines collapsed ✅
@@ -121,6 +121,7 @@ cd integrations/macos-quick-action
 ```
 
 **Use:**
+
 1. Right-click any `.md` file in Finder
 2. Quick Actions → Fix Markdown
 3. Done! File is fixed in-place
@@ -146,6 +147,7 @@ pip install py2app
 ```
 
 **Use:**
+
 1. Drag one or more `.md` files onto the app icon
 2. Files are fixed in-place
 3. Notification shows completion
@@ -157,6 +159,7 @@ pip install py2app
 **What it does:** Adds "Fix Markdown Formatting" to your IDE (PyCharm, IntelliJ, PhpStorm, WebStorm, etc.)
 
 **Quick Setup:**
+
 1. Download [external-tool-config.xml](integrations/jetbrains/external-tool-config.xml)
 2. Open IDE → **Settings** → **Tools** → **External Tools**
 3. Click gear icon → **Import**
@@ -164,11 +167,13 @@ pip install py2app
 5. Done!
 
 **Use:**
+
 1. Right-click any `.md` file
 2. External Tools → Fix Markdown Formatting
 3. File is fixed in-place
 
 **Add keyboard shortcut (optional):**
+
 - Settings → Keymap
 - Search "Fix Markdown"
 - Add shortcut (e.g., `Cmd+Shift+F`)
@@ -200,6 +205,7 @@ pip install -e .
 ```
 
 **3. Auto-Fix Hook** (Automatic)
+
 - Edit any `.md` file
 - Submit a prompt
 - File is automatically fixed!
@@ -244,6 +250,7 @@ More text
 ```
 
 **Available commands:**
+
 - "Fix this markdown: [content]"
 - "Fix the file at ~/Documents/README.md"
 - "Preview changes to this markdown: [content]"
@@ -422,6 +429,7 @@ fixer.fix_file("README.md", in_place=True)
 You now have markdown-fixer installed and know how to use it. Pick your favorite integration and start fixing markdown!
 
 **Quick links:**
+
 - [CLI Reference](README.md#command-line)
 - [All Integrations](README.md#usage)
 - [What It Fixes](README.md#what-it-fixes)

@@ -5,6 +5,7 @@ description: Fix all markdown files in the project
 Fix all markdown files in the current project using markdown-fixer.
 
 Steps:
+
 1. Find all .md files in the project: `find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*"`
 2. Show the user the list of files found
 3. Ask for confirmation to fix all files

@@ -1,11 +1,11 @@
 # Markdown Fixer - Complete Implementation Plan
 
-**Project:** Markdown Fixer Multi-Platform Tool  
-**Repository:** `jamespublishlab/markdown-fixer`  
-**License:** MIT  
-**Author:** James  
-**Date:** October 25, 2025  
-**Timeline:** 2-3 weeks
+- **Project:** Markdown Fixer Multi-Platform Tool
+- **Repository:** `jamespublishlab/markdown-fixer`
+- **License:** MIT
+- **Author:** James
+- **Date:** October 25, 2025
+- **Timeline:** 2-3 weeks
 
 ---
 
@@ -50,6 +50,7 @@ LLM-generated markdown files consistently have formatting issues that break rend
 - **Inconsistent field metadata** - `**Key:** value` patterns that should be bulleted
 
 Users need a **frictionless way** to fix these issues across different workflows:
+
 - Terminal users want CLI
 - Mac users want right-click in Finder
 - IDE users want in-editor formatting
@@ -76,6 +77,7 @@ Users need a **frictionless way** to fix these issues across different workflows
 All rules based on existing `format_markdown.py` script:
 
 #### 1. Blank Lines Around Lists
+
 - Add blank line before list starts
 - Add blank line after list ends
 - Works with ordered lists (`1.`, `2.`) and unordered (`-`, `*`, `+`)
@@ -99,6 +101,7 @@ More text
 ```
 
 #### 2. Field Metadata Conversion
+
 - Detect `**Key:** value` pattern
 - Convert **2+ consecutive** fields to bulleted list
 - Preserve **single** fields as-is (no bullet)
@@ -124,6 +127,7 @@ More text
 ```
 
 #### 3. Newline Normalization
+
 - Collapse 3+ consecutive newlines to exactly 2 (one blank line)
 - Preserves double newlines (paragraph breaks)
 - Prevents excessive whitespace
@@ -132,8 +136,6 @@ More text
 ```markdown
 # Before
 Section 1
-
-
 
 Section 2
 
@@ -144,6 +146,7 @@ Section 2
 ```
 
 #### 4. Smart Context Awareness
+
 - **Never modify code blocks** - Content inside ` ```...``` ` is untouched
 - Respects blockquotes (`>`)
 - Preserves headers (`#`, `##`, etc.)
@@ -246,7 +249,6 @@ Core markdown formatting logic.
 import re
 from pathlib import Path
 from typing import Optional
-
 
 class MarkdownFixer:
     """Fixes common markdown formatting issues."""
@@ -466,7 +468,6 @@ import click
 from .core import MarkdownFixer
 from .__version__ import __version__
 
-
 @click.command()
 @click.version_option(version=__version__)
 @click.argument('files', nargs=-1, type=click.Path(exists=True), required=True)
@@ -552,7 +553,6 @@ def main(files, in_place, dry_run, output, verbose):
                 traceback.print_exc()
             sys.exit(1)
 
-
 if __name__ == '__main__':
     main()
 ```
@@ -636,7 +636,6 @@ target-version = "py38"
 import pytest
 from markdown_fixer import MarkdownFixer
 
-
 class TestListFormatting:
     """Test blank lines around lists."""
     
@@ -698,7 +697,6 @@ More text"""
         fixer = MarkdownFixer()
         assert fixer.fix_string(input_md) == expected
 
-
 class TestFieldMetadata:
     """Test field metadata conversion."""
     
@@ -756,13 +754,11 @@ More text"""
         fixer = MarkdownFixer()
         assert fixer.fix_string(input_md) == expected
 
-
 class TestNewlineCollapsing:
     """Test excessive newline removal."""
     
     def test_triple_newlines_collapsed(self):
         input_md = """Section 1
-
 
 Section 2"""
         
@@ -775,9 +771,6 @@ Section 2"""
     
     def test_many_newlines_collapsed(self):
         input_md = """Section 1
-
-
-
 
 Section 2"""
         
@@ -800,7 +793,6 @@ Paragraph 2"""
         fixer = MarkdownFixer()
         assert fixer.fix_string(input_md) == expected
 
-
 class TestCodeBlockHandling:
     """Test that code blocks are never modified."""
     
@@ -808,6 +800,7 @@ class TestCodeBlockHandling:
         input_md = """Text
 ```python
 def foo():
+
 - not a list
 **Key:** not metadata
 ```
@@ -823,6 +816,7 @@ More text"""
     def test_list_before_code_block(self):
         input_md = """- List item
 ```
+
 code
 ```
 Text"""
@@ -840,7 +834,6 @@ Text"""
         # Should have blank line after list and before text
         assert result.count('\n\n') >= 2
 
-
 class TestComplexCombinations:
     """Test realistic complex scenarios."""
     
@@ -855,7 +848,6 @@ This document provides guidelines.
 - Use examples
 - Be concise
 The following sections cover:
-
 
 ## Best Practices
 Follow these rules:
@@ -878,7 +870,6 @@ End of section."""
         
         # Should have collapsed triple newlines
         assert "\n\n\n" not in result
-
 
 class TestFileOperations:
     """Test file reading and writing."""
@@ -952,6 +943,7 @@ SOFTWARE.
 ```
 
 **Phase 1 Deliverables:**
+
 - ✅ Working Python package structure
 - ✅ Core formatting logic in `MarkdownFixer` class
 - ✅ CLI tool with `markdown-fixer` and `mdfixer` commands
@@ -1171,6 +1163,7 @@ killall Finder
 ```
 
 **Phase 2 Deliverables:**
+
 - ✅ Pre-built `.workflow` file in repository
 - ✅ Installation script
 - ✅ Comprehensive README with troubleshooting
@@ -1205,7 +1198,6 @@ except ImportError:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib'))
     from markdown_fixer import MarkdownFixer
 
-
 def show_notification(title: str, message: str, sound: str = "Glass"):
     """Show macOS notification."""
     # Escape quotes in message
@@ -1217,7 +1209,6 @@ def show_notification(title: str, message: str, sound: str = "Glass"):
     '''
     os.system(f"osascript -e '{applescript}'")
 
-
 def show_alert(title: str, message: str):
     """Show macOS alert dialog."""
     message = message.replace('"', '\\"')
@@ -1227,7 +1218,6 @@ def show_alert(title: str, message: str):
     display alert "{title}" message "{message}" as warning
     '''
     os.system(f"osascript -e '{applescript}'")
-
 
 def main():
     """Process files dropped on the app."""
@@ -1288,7 +1278,6 @@ def main():
             "No Files Fixed",
             "No markdown files were processed."
         )
-
 
 if __name__ == '__main__':
     main()
@@ -1591,6 +1580,7 @@ pip3 install markdown-fixer
 ```
 
 **Phase 3 Deliverables:**
+
 - ✅ Python wrapper script for drag-and-drop
 - ✅ Platypus build script (simple option)
 - ✅ py2app build script (professional option)
@@ -1860,6 +1850,7 @@ Usually: `/usr/local/bin/markdown-fixer` or `~/.local/bin/markdown-fixer`
 Create directory: `integrations/jetbrains/screenshots/`
 
 **Screenshots needed:**
+
 1. External Tools settings screen
 2. Import dialog
 3. Configured tool
@@ -1868,6 +1859,7 @@ Create directory: `integrations/jetbrains/screenshots/`
 6. File Watcher configuration
 
 **Phase 4 Deliverables:**
+
 - ✅ XML configuration file for import
 - ✅ Detailed step-by-step setup guide
 - ✅ Quick reference card
@@ -2471,6 +2463,7 @@ jobs:
 ```
 
 **Phase 5 Deliverables:**
+
 - ✅ Universal installer script (one-command setup)
 - ✅ Homebrew formula in custom tap
 - ✅ Release build automation script
@@ -2503,13 +2496,16 @@ LLMs like ChatGPT and Claude consistently produce markdown with formatting issue
 **Before:**
 ```markdown
 # Documentation
-**Purpose:** Guide for developers
-**Status:** Active
+
+- **Purpose:** Guide for developers
+- **Status:** Active
+
 This explains the API.
+
 - List item 1
 - List item 2
-Next section...
 
+Next section...
 
 Too many blank lines
 ```
@@ -2621,8 +2617,10 @@ markdown-fixer --help
 
 ```markdown
 Some text
+
 - Item 1
 - Item 2
+
 More text
 ```
 
@@ -2641,13 +2639,16 @@ More text
 **Problem:** `**Key:** value` patterns that should be lists
 
 ```markdown
-**Author:** James
-**Status:** Complete
-**Updated:** 2025-10-25
+
+- **Author:** James
+- **Status:** Complete
+- **Updated:** 2025-10-25
+
 ```
 
 **Fixed:**
 ```markdown
+
 - **Author:** James
 - **Status:** Complete
 - **Updated:** 2025-10-25
@@ -2660,9 +2661,8 @@ More text
 **Problem:** 3+ consecutive blank lines
 
 ```markdown
+
 Section 1
-
-
 
 Section 2
 ```
@@ -2768,7 +2768,6 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 import pytest
 from click.testing import CliRunner
 from markdown_fixer.cli import main
-
 
 class TestCLI:
     """Test command-line interface."""
@@ -2896,7 +2895,6 @@ class TestCLI:
 import subprocess
 from pathlib import Path
 
-
 class TestIntegration:
     """Test real-world usage scenarios."""
     
@@ -2923,7 +2921,6 @@ This document describes the REST API.
 - Endpoints
 - Examples
 The API supports JSON.
-
 
 ## Authentication
 Use Bearer tokens.
@@ -3084,6 +3081,7 @@ Open an issue or discussion on GitHub!
 ```
 
 **Phase 6 Deliverables:**
+
 - ✅ Comprehensive README with examples
 - ✅ Complete test suite (80%+ coverage)
 - ✅ Integration tests
@@ -3162,6 +3160,7 @@ Open an issue or discussion on GitHub!
 ### Short-term (v1.1-1.2)
 
 **VS Code Extension** (2-3 days)
+
 - Command palette command to fix current file
 - Format on save option
 - Status bar integration
@@ -3184,6 +3183,7 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 ```
 
 **Additional Rules** (ongoing)
+
 - Fix table formatting
 - Normalize link formats
 - Smart quote conversion
@@ -3192,6 +3192,7 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 ### Medium-term (v2.0)
 
 **Web UI** (1 week)
+
 - Paste markdown, get fixed version
 - Downloadable file
 - Share fixed content
@@ -3204,6 +3205,7 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 ```
 
 **Obsidian Plugin** (1 week)
+
 - Command to fix current note
 - Fix all notes in vault
 - Auto-fix on note creation
@@ -3211,15 +3213,18 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 ### Long-term (v3.0+)
 
 **Windows/Linux Support**
+
 - Port Quick Action to Windows shell integration
 - Linux desktop integration
 
 **AI-Powered Fixes**
+
 - Detect and fix more complex formatting issues
 - Suggest restructuring
 - Improve readability
 
 **Plugins System**
+
 - Custom formatting rules
 - Third-party extensions
 - Rule sharing community
@@ -3230,6 +3235,7 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 
 ### Week 1
 **Days 1-2:** Core Package
+
 - Project structure
 - Core formatting logic
 - CLI tool
@@ -3237,6 +3243,7 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 - **Deliverable:** Working `pip install markdown-fixer`
 
 **Days 3-4:** macOS Quick Action
+
 - Automator workflow
 - Installation script
 - Documentation
@@ -3246,17 +3253,20 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 
 ### Week 2
 **Days 1-2:** Mac App
+
 - App wrapper script
 - Platypus/py2app builds
 - Icon creation
 - **Deliverable:** Drag-and-drop app
 
 **Day 3:** JetBrains Integration
+
 - External tool XML
 - Setup documentation
 - **Deliverable:** In-editor formatting
 
 **Days 4-5:** Distribution
+
 - Universal installer
 - Homebrew formula
 - Release automation
@@ -3264,12 +3274,14 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 
 ### Week 3
 **Days 1-3:** Documentation & Testing
+
 - README polish
 - Integration tests
 - CHANGELOG, CONTRIBUTING
 - **Deliverable:** Production-ready docs
 
 **Days 4-5:** Release
+
 - Final testing
 - Build artifacts
 - GitHub release
@@ -3305,24 +3317,28 @@ ignore_patterns = ["*.draft.md", "temp/*.md"]
 ## Technical Decisions
 
 ### Why Python?
+
 - Fast development
 - Rich ecosystem (Click for CLI)
 - Easy distribution (PyPI, pip, pipx)
 - Cross-platform potential
 
 ### Why Platypus/py2app?
+
 - Native Mac app without complex setup
 - py2app for professional distribution
 - Platypus for quick prototyping
 - Both support drag-and-drop
 
 ### Why Custom Homebrew Tap?
+
 - Full control over formula
 - Can include extra files (workflows, apps)
 - Easier to maintain
 - No wait for homebrew-core approval
 
 ### Why External Tool (not full plugin)?
+
 - Much faster to implement (15 min vs. days)
 - Works across all JetBrains IDEs
 - No plugin maintenance burden
@@ -3388,6 +3404,6 @@ twine upload dist/*
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** October 25, 2025  
-**Status:** Ready for Implementation
+- **Document Version:** 1.0
+- **Last Updated:** October 25, 2025
+- **Status:** Ready for Implementation

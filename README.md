@@ -38,7 +38,6 @@ This explains the API.
 - List item 2
 Next section...
 
-
 Too many blank lines
 ```
 
@@ -135,6 +134,7 @@ markdown-fixer --help
 ### JetBrains IDEs (PhpStorm, PyCharm, IntelliJ, WebStorm)
 
 **Quick Setup:**
+
 1. Download [external-tool-config.xml](integrations/jetbrains/external-tool-config.xml)
 2. **Settings** → **Tools** → **External Tools** → Import XML
 3. Right-click `.md` files → **External Tools** → **Fix Markdown**
@@ -174,6 +174,7 @@ cd integrations/mcp-server
 ```
 
 **What it does:**
+
 - Claude can automatically fix markdown you generate
 - Preview changes before applying
 - Fix files on your local system
@@ -238,8 +239,6 @@ More text
 ```markdown
 Section 1
 
-
-
 Section 2
 ```
 
@@ -253,6 +252,7 @@ Section 2
 ### 4. Smart Context Awareness
 
 **Never modifies:**
+
 - Code blocks (` ```...``` `)
 - Blockquotes
 - Headers

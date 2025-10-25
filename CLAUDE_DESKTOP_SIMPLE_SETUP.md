@@ -26,11 +26,13 @@ Claude: [Uses markdown-fixer tool]
 ## ⚠️ Before You Start
 
 **You need:**
+
 - ✅ A Mac (macOS) or Windows computer
 - ✅ Claude Desktop installed
 - ✅ 5 minutes
 
 **You do NOT need:**
+
 - ❌ Programming knowledge
 - ❌ Terminal skills
 - ❌ To understand what Python is
@@ -70,6 +72,7 @@ Claude: [Uses markdown-fixer tool]
 **If you see an error, install Python:**
 
 **On Mac:**
+
 1. Go to: https://www.python.org/downloads/
 2. Click the big yellow **Download Python** button
 3. Open the downloaded file
@@ -77,6 +80,7 @@ Claude: [Uses markdown-fixer tool]
 5. Done!
 
 **On Windows:**
+
 1. Go to: https://www.python.org/downloads/
 2. Click **Download Python**
 3. Open the downloaded file
@@ -193,11 +197,13 @@ Claude: [Uses markdown-fixer tool]
 **Now paste it:**
 
 **If this is a NEW file (you just created it):**
+
 1. Just paste the text you copied
 2. Save the file as `claude_desktop_config.json` in the Claude folder
    - **Make sure** it ends with `.json` NOT `.txt`!
 
 **If the file ALREADY EXISTS:**
+
 1. You'll see existing content
 2. Find the `"mcpServers": {` line
 3. **Inside** the `{` after `mcpServers`, add a comma after the last item
@@ -251,10 +257,12 @@ If Claude says it can't find the tool, see **Troubleshooting** below.
 ### "I can't find the Claude folder!"
 
 **On Mac:**
+
 - Make sure you're holding the **Option key** when clicking the Go menu
 - If Library still doesn't show: Open Finder → Press `Command + Shift + G` → Type `~/Library` → Press Enter
 
 **On Windows:**
+
 - Make sure you typed `%APPDATA%` correctly (with the percent signs)
 - Try: `C:\Users\YourUsername\AppData\Roaming\Claude`
 
@@ -291,11 +299,13 @@ Instead of the config above, try this (find your exact path first):
 Your computer is hiding the real extension!
 
 **On Mac:**
+
 1. Right-click the file → Get Info
 2. Delete `.txt` from the name
 3. Click "Use .json"
 
 **On Windows:**
+
 1. Open File Explorer
 2. Click **View** → Check **File name extensions**
 3. Rename the file to remove `.txt`
@@ -303,12 +313,14 @@ Your computer is hiding the real extension!
 ### "I'm getting JSON errors"
 
 **Common mistakes:**
+
 - ❌ Missing commas between items
 - ❌ Extra comma after the last item
 - ❌ Missing quotes around text
 - ❌ Missing curly braces `{}`
 
 **Easy fix:**
+
 1. Delete everything in the file
 2. Copy the template again (from Step 6)
 3. Paste fresh
@@ -328,6 +340,7 @@ Your computer is hiding the real extension!
 Open an issue with screenshots: https://github.com/jamespublishlab/markdown-fixer/issues
 
 Include:
+
 - Your operating system (Mac or Windows, which version)
 - A screenshot of your claude_desktop_config.json file
 - What happens when you ask Claude to fix markdown
@@ -373,6 +386,7 @@ Claude will automatically use markdown-fixer to clean it up!
 ## 💡 What Happened?
 
 In simple terms:
+
 1. You installed a tool (markdown-fixer) that fixes markdown
 2. You told Claude Desktop where to find that tool
 3. Now Claude can use it whenever you ask

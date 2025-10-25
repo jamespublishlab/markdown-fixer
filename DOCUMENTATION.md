@@ -5,6 +5,7 @@ Complete guide to all markdown-fixer documentation.
 ## 📖 Start Here
 
 ### New Users
+
 - **[Getting Started Guide](GETTING_STARTED.md)** ⭐ **START HERE**
   - 5-minute quickstart
   - Installation for all platforms
@@ -12,6 +13,7 @@ Complete guide to all markdown-fixer documentation.
   - Common questions and troubleshooting
 
 ### Overview
+
 - **[README.md](README.md)** - Main project documentation
   - What markdown-fixer does
   - Feature overview
@@ -21,6 +23,7 @@ Complete guide to all markdown-fixer documentation.
 ## 🛠️ Installation & Usage
 
 ### Command-Line Tool (CLI)
+
 - **[README.md - CLI Section](README.md#command-line)** - Basic CLI usage
 - **[Getting Started - CLI](GETTING_STARTED.md#cli-usage)** - Detailed CLI guide
 - Built-in help: `markdown-fixer --help`
@@ -28,6 +31,7 @@ Complete guide to all markdown-fixer documentation.
 ### macOS Integrations
 
 #### Quick Action (Finder Right-Click)
+
 - **[Quick Action README](integrations/macos-quick-action/README.md)**
   - Installation instructions
   - Usage guide
@@ -35,6 +39,7 @@ Complete guide to all markdown-fixer documentation.
 - **[Getting Started - Quick Action](GETTING_STARTED.md#macos-quick-action)** - Quick setup
 
 #### Drag-and-Drop App
+
 - **[macOS App README](integrations/macos-app/README.md)**
   - Building the app (Platypus & py2app)
   - Installation
@@ -231,20 +236,24 @@ Options:
 ### By User Type
 
 **I'm a developer who wants:**
+
 - Quick CLI tool → [Getting Started - CLI](GETTING_STARTED.md#cli-usage)
 - IDE integration → [JetBrains Guide](integrations/jetbrains/SETUP.md)
 - Python library → [API Reference](#api-reference)
 
 **I'm a writer who wants:**
+
 - Easiest option → [Getting Started Guide](GETTING_STARTED.md)
 - macOS integration → [Quick Action](integrations/macos-quick-action/README.md)
 - Drag-and-drop → [macOS App](integrations/macos-app/README.md)
 
 **I use AI assistants:**
+
 - Claude Desktop → [MCP Server](integrations/mcp-server/README.md)
 - Claude Code → [Claude Code Guide](.claude/README.md)
 
 **I want to contribute:**
+
 - Start here → [STRUCTURE.md](STRUCTURE.md)
 - Architecture → [STRUCTURE.md - Design Principles](STRUCTURE.md#design-principles)
 - Development → [STRUCTURE.md - Development Workflow](STRUCTURE.md#development-workflow)
@@ -252,6 +261,7 @@ Options:
 ### By Task
 
 **I want to:**
+
 - **Install** → [Getting Started - Installation](GETTING_STARTED.md#step-1-install)
 - **Fix a file** → [Getting Started - CLI](GETTING_STARTED.md#step-2-fix-your-first-file)
 - **Choose integration** → [Getting Started - Workflow](GETTING_STARTED.md#step-3-choose-your-workflow)

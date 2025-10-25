@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Claude Desktop MCP Server integration (Model Context Protocol)
 - Claude Code skill for AI-guided markdown fixing
 - Claude Code auto-fix hook (fixes markdown on save)
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick start section in main README
 
 ### Improved
+
 - README now has prominent getting started link at top
 - Better documentation navigation and discoverability
 - Cross-references between all documentation files
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-10-25
 
 ### Added
+
 - Initial release
 - Core markdown formatting engine
 - CLI tool with multiple options (--in-place, --dry-run, --output, --verbose)
@@ -38,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code-block awareness (never modifies code blocks)
 
 ### Features
+
 - **Blank Lines Around Lists**: Automatically adds proper spacing before and after lists
 - **Field Metadata Conversion**: Converts 2+ consecutive `**Key:** value` patterns to bulleted lists
 - **Newline Normalization**: Collapses 3+ consecutive newlines to exactly 2
@@ -45,12 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multi-Platform Support**: Available as CLI, macOS Quick Action, macOS App, and JetBrains plugin
 
 ### Installation Methods
+
 - Python package via pip/pipx
 - Homebrew formula (via tap)
 - Universal installer script
 - Manual installation for all integrations
 
 ### Documentation
+
 - Comprehensive README with usage examples
 - Integration guides for macOS Quick Action, macOS App, and JetBrains IDEs
 - Build and release automation scripts

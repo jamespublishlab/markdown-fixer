@@ -6,16 +6,18 @@ This directory contains hooks that integrate markdown-fixer with Claude Code's w
 
 ### `user-prompt-submit.sh`
 
-**Trigger:** After each user prompt submission
-**Purpose:** Automatically fix markdown formatting after edits
+- **Trigger:** After each user prompt submission
+- **Purpose:** Automatically fix markdown formatting after edits
 
 **What it does:**
+
 1. Detects if markdown-fixer is installed (silently skips if not)
 2. Finds markdown files that were recently modified
 3. Runs markdown-fixer on them automatically
 4. Operates silently (no output unless errors)
 
 **When it runs:**
+
 - After you edit a markdown file and submit a prompt
 - Only on .md files that have been modified
 - Only if markdown-fixer is installed
@@ -93,11 +95,13 @@ modified_files=$(git diff --name-only --diff-filter=M | grep '\.md$' | grep -v '
 ### Git Integration
 
 If you're in a git repository:
+
 - Only fixes files tracked by git
 - Only fixes files with uncommitted changes
 - Uses `git diff` to detect modifications
 
 If not in a git repo:
+
 - Fixes any .md files modified in the last 2 minutes
 - Limited to current and one level of subdirectories
 

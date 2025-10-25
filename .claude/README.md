@@ -29,6 +29,7 @@ Fix all markdown files in the project.
 ### 2. Skill (`../skill/`)
 
 A comprehensive Claude Code skill that provides intelligent markdown fixing workflows. The skill enables Claude Code to:
+
 - Automatically detect formatting issues
 - Preview changes before applying
 - Handle installation and setup
@@ -41,6 +42,7 @@ A comprehensive Claude Code skill that provides intelligent markdown fixing work
 Automatically fixes markdown files after edits.
 
 **How it works:**
+
 - Triggers after each prompt submission
 - Detects modified markdown files
 - Runs markdown-fixer silently
@@ -79,6 +81,7 @@ pipx install -e .
 ```
 
 **Edit and auto-fix:**
+
 1. Edit any .md file
 2. Submit a prompt
 3. File is automatically fixed

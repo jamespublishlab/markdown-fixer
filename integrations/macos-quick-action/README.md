@@ -10,6 +10,7 @@ Adds "Fix Markdown" to Finder's right-click menu.
 ```
 
 ### Option 2: Manual Installation
+
 1. Double-click `Fix Markdown.workflow`
 2. Click "Install" when prompted
 
