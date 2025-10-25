@@ -48,7 +48,7 @@ Complete guide to all markdown-fixer documentation.
 
 ### JetBrains IDEs
 
-- **[JetBrains Setup Guide](integrations/jetbrains/SETUP.md)** ⭐ **Detailed**
+- **[JetBrains Setup Guide](integrations/jetbrains/README.md)** ⭐ **Detailed**
   - Step-by-step setup for all JetBrains IDEs
   - Import XML configuration
   - Manual setup
@@ -199,7 +199,7 @@ Options:
 
 - **macOS Quick Action**: [Troubleshooting](integrations/macos-quick-action/README.md#troubleshooting)
 - **macOS App**: [Troubleshooting](integrations/macos-app/README.md#troubleshooting)
-- **JetBrains**: [Troubleshooting](integrations/jetbrains/SETUP.md#troubleshooting)
+- **JetBrains**: [Troubleshooting](integrations/jetbrains/README.md#troubleshooting)
 - **Claude Code**: [Troubleshooting](.claude/README.md#troubleshooting)
 - **MCP Server**: [Troubleshooting](integrations/mcp-server/README.md#troubleshooting)
 
@@ -238,7 +238,7 @@ Options:
 **I'm a developer who wants:**
 
 - Quick CLI tool → [Getting Started - CLI](GETTING_STARTED.md#cli-usage)
-- IDE integration → [JetBrains Guide](integrations/jetbrains/SETUP.md)
+- IDE integration → [JetBrains Guide](integrations/jetbrains/README.md)
 - Python library → [API Reference](#api-reference)
 
 **I'm a writer who wants:**

@@ -22,7 +22,7 @@ markdown-fixer file.md --in-place
 
 **Using Claude Desktop?** → [Simple Setup (no coding!)](CLAUDE_DESKTOP_SIMPLE_SETUP.md)
 
-**Looking for a specific integration?** Jump to: [CLI](#command-line) | [macOS](#macos-quick-action) | [JetBrains](#jetbrains-ides-phpstorm-pycharm-intellij-webstorm) | [Claude Code](#claude-code-integration) | [Claude Desktop](#claude-desktop-mcp-server)
+**Looking for a specific integration?:** [CLI](#command-line) | [macOS](#macos-quick-action) | [JetBrains](#jetbrains-ides-phpstorm-pycharm-intellij-webstorm) | [Claude Code](#claude-code-integration) | [Claude Desktop](#claude-desktop-mcp-server)
 
 ## The Problem
 
@@ -139,7 +139,7 @@ markdown-fixer --help
 2. **Settings** → **Tools** → **External Tools** → Import XML
 3. Right-click `.md` files → **External Tools** → **Fix Markdown**
 
-**Full Guide:** [JetBrains Setup](integrations/jetbrains/SETUP.md)
+**Full Guide:** [JetBrains Setup](integrations/jetbrains/README.md)
 
 ### Claude Code Integration
 
@@ -339,7 +339,7 @@ MIT License - see [LICENSE](LICENSE) file.
 
 - **[macOS Quick Action](integrations/macos-quick-action/README.md)** - Finder right-click
 - **[macOS App](integrations/macos-app/README.md)** - Drag-and-drop application
-- **[JetBrains IDE](integrations/jetbrains/SETUP.md)** - PyCharm, IntelliJ, etc.
+- **[JetBrains IDE](integrations/jetbrains/README.md)** - PyCharm, IntelliJ, etc.
 - **[Claude Code](.claude/README.md)** - Slash commands, skill, auto-fix
 - **[Claude Desktop MCP Server](integrations/mcp-server/README.md)** - AI integration
 

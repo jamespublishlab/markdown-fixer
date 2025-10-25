@@ -178,7 +178,7 @@ pip install py2app
 - Search "Fix Markdown"
 - Add shortcut (e.g., `Cmd+Shift+F`)
 
-**Details:** See [JetBrains Setup Guide](integrations/jetbrains/SETUP.md)
+**Details:** See [JetBrains Setup Guide](integrations/jetbrains/README.md)
 
 ### Claude Code
 

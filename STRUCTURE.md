@@ -21,9 +21,8 @@ markdown-fixer/
 │
 ├── integrations/                     # Platform-specific integrations
 │   ├── jetbrains/                    # JetBrains IDE integration
-│   │   ├── external-tool-config.xml # Import configuration
-│   │   ├── SETUP.md                 # Detailed setup guide
-│   │   └── README.md                # Quick start
+│   │   ├── markdown-fixer.xml       # Import configuration
+│   │   └── README.md                # Complete setup guide
 │   │
 │   ├── macos-app/                    # macOS drag-and-drop app
 │   │   ├── app_wrapper.py           # Python wrapper
@@ -264,7 +263,7 @@ mypy src/                       # Type check
 4. **CHANGELOG.md** - Version history
 5. **Integration READMEs** - Platform-specific guides
    - `.claude/README.md`
-   - `integrations/jetbrains/SETUP.md`
+   - `integrations/jetbrains/README.md`
    - `integrations/macos-app/README.md`
    - `integrations/macos-quick-action/README.md`
 6. **Skill README** - `skill/README.md` - Claude Code skill
