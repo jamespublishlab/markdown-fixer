@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Claude Desktop MCP Server integration (Model Context Protocol)
+- Claude Code skill for AI-guided markdown fixing
+- Claude Code auto-fix hook (fixes markdown on save)
+- Comprehensive GETTING_STARTED.md guide (5-minute quickstart)
+- Complete DOCUMENTATION.md index with navigation for all docs
+- Quick start section in main README
+
+### Improved
+- README now has prominent getting started link at top
+- Better documentation navigation and discoverability
+- Cross-references between all documentation files
+- Documentation section in README with all guides linked
+
 ## [1.0.0] - 2025-10-25
 
 ### Added
