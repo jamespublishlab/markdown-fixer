@@ -2,6 +2,20 @@
 
 Integrate markdown-fixer directly into Claude Desktop via the Model Context Protocol (MCP).
 
+---
+
+## 🚀 New to This? Start Here!
+
+**Non-technical user?** We have a simple, step-by-step guide just for you:
+
+👉 **[Simple Setup Guide for Non-Technical Users](../../CLAUDE_DESKTOP_SIMPLE_SETUP.md)** 👈
+
+No command line knowledge needed! Just copy, paste, and click.
+
+**Technical user?** Continue reading below for advanced options.
+
+---
+
 ## What is MCP?
 
 The [Model Context Protocol (MCP)](https://modelcontextprotocol.io) is an open standard that allows AI assistants like Claude to connect with external tools and data sources. This MCP server exposes markdown-fixer's capabilities directly to Claude Desktop.
@@ -36,11 +50,14 @@ The installer will:
 #### 1. Install markdown-fixer
 
 ```bash
-# From project root
-pip install -e .
+# Install from PyPI (recommended)
+pip3 install markdown-fixer
+
+# Or from project root
+pip3 install -e .
 
 # Or with pipx
-pipx install -e .
+pipx install markdown-fixer
 ```
 
 #### 2. Configure Claude Desktop
@@ -51,8 +68,29 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Linux:**
 Edit `~/.config/Claude/claude_desktop_config.json`
 
+**Windows:**
+Edit `%APPDATA%\Claude\claude_desktop_config.json`
+
 Add this configuration:
 
+**Simple method (recommended):**
+```json
+{
+  "mcpServers": {
+    "markdown-fixer": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "markdown_fixer.mcp_server"
+      ]
+    }
+  }
+}
+```
+
+**Note:** On Windows, use `"python"` instead of `"python3"`.
+
+**Alternative method (using server.py path):**
 ```json
 {
   "mcpServers": {
@@ -194,10 +232,14 @@ cat ~/.config/Claude/claude_desktop_config.json
 
 **Test server directly:**
 ```bash
-python3 integrations/mcp-server/server.py
+# Using module (recommended)
+python3 -m markdown_fixer.mcp_server
 # Type: {"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
 # Press Enter
 # Should see a JSON response
+
+# Or using server.py path
+python3 integrations/mcp-server/server.py
 ```
 
 **Check logs:**
@@ -287,11 +329,14 @@ Add custom environment variables:
 ### Testing the Server
 
 ```bash
-# Run server in stdio mode
+# Run server in stdio mode (module approach)
+python3 -m markdown_fixer.mcp_server
+
+# Or using server.py path
 python3 integrations/mcp-server/server.py
 
 # Send test request
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | python3 server.py
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | python3 -m markdown_fixer.mcp_server
 ```
 
 ### Debugging

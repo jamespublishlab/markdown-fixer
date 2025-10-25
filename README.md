@@ -20,6 +20,8 @@ markdown-fixer file.md --in-place
 
 **New to markdown-fixer?** See [Getting Started Guide](GETTING_STARTED.md) for a 5-minute tutorial.
 
+**Using Claude Desktop?** → [Simple Setup (no coding!)](CLAUDE_DESKTOP_SIMPLE_SETUP.md)
+
 **Looking for a specific integration?** Jump to: [CLI](#command-line) | [macOS](#macos-quick-action) | [JetBrains](#jetbrains-ides-phpstorm-pycharm-intellij-webstorm) | [Claude Code](#claude-code-integration) | [Claude Desktop](#claude-desktop-mcp-server)
 
 ## The Problem
@@ -163,7 +165,9 @@ markdown-fixer --help
 
 Integrate directly into Claude Desktop via Model Context Protocol!
 
-**Quick Install:**
+**👉 Non-technical user?** → [Simple Setup Guide (no coding required!)](CLAUDE_DESKTOP_SIMPLE_SETUP.md)
+
+**Quick Install (for developers):**
 ```bash
 cd integrations/mcp-server
 ./install.sh

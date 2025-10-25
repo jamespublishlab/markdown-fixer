@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "markdown-fixer": {
+      "command": "python",
+      "args": [
+        "-m",
+        "markdown_fixer.mcp_server"
+      ]
+    }
+  }
+}
