@@ -46,6 +46,11 @@ class MarkdownFixerMCPServer:
         params = request.get("params", {})
         request_id = request.get("id")
 
+        # If no id, this might be a notification - don't respond
+        if request_id is None and method:
+            logger.warning(f"Received notification (no id): {method}")
+            return None
+
         logger.info(f"Received request: {method}")
 
         try:
@@ -81,13 +86,13 @@ class MarkdownFixerMCPServer:
         tools = [
             {
                 "name": "fix_markdown",
-                "description": "Fix common markdown formatting issues in content",
+                "description": "Fix markdown formatting issues in content. USE THIS for uploaded files, content from conversations, or any markdown content you have as a string. This is the PRIMARY tool for most interactions.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "content": {
                             "type": "string",
-                            "description": "The markdown content to fix"
+                            "description": "The markdown content to fix. Can be from uploaded files (read them first), pasted content, or generated text."
                         }
                     },
                     "required": ["content"]
@@ -95,13 +100,13 @@ class MarkdownFixerMCPServer:
             },
             {
                 "name": "fix_markdown_file",
-                "description": "Fix markdown formatting issues in a file",
+                "description": "Fix markdown formatting in a file on the user's local filesystem. ONLY use for files in user directories like ~/Desktop, ~/Documents, ~/Downloads. Does NOT work with uploaded files in Claude Desktop - use fix_markdown for those instead.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "filepath": {
                             "type": "string",
-                            "description": "Path to the markdown file to fix"
+                            "description": "Absolute path to a markdown file on the user's actual filesystem (e.g., /Users/username/Desktop/file.md). NOT for uploaded files."
                         },
                         "in_place": {
                             "type": "boolean",
@@ -114,7 +119,7 @@ class MarkdownFixerMCPServer:
             },
             {
                 "name": "preview_markdown_fixes",
-                "description": "Preview what changes would be made without modifying content",
+                "description": "Preview what formatting changes would be made to markdown content without applying them. Useful for showing users what will change before fixing.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -287,12 +292,12 @@ class MarkdownFixerMCPServer:
                     request = json.loads(line)
                     response = self.handle_request(request)
 
-                    # Write response to stdout
-                    print(json.dumps(response), flush=True)
+                    # Write response to stdout (only if there is one)
+                    if response is not None:
+                        print(json.dumps(response), flush=True)
                 except json.JSONDecodeError as e:
                     logger.error(f"Invalid JSON: {e}")
-                    error_response = self._error_response(None, -32700, "Parse error")
-                    print(json.dumps(error_response), flush=True)
+                    # Don't send response for parse errors - client can't match it without an id
         except KeyboardInterrupt:
             logger.info("Server stopped by user")
         except Exception as e:

@@ -138,24 +138,40 @@ Claude will use the `fix_markdown` tool to clean it up automatically!
 
 The MCP server provides three tools:
 
-#### 1. `fix_markdown`
-Fixes markdown content directly.
+#### 1. `fix_markdown` ⭐ Primary Tool
+Fixes markdown content directly. **Use this for uploaded files, pasted content, or generated markdown.**
+
+**When to use:**
+
+- Uploaded files (Claude will read them first, then pass content to this tool)
+- Content you paste in the conversation
+- Markdown Claude generates
 
 **Example:**
 ```
 "Fix this markdown content: [paste your markdown]"
 ```
 
-#### 2. `fix_markdown_file`
-Fixes a markdown file on your system.
+#### 2. `fix_markdown_file` 📁 Local Files Only
+Fixes markdown files on your local filesystem. **Only works with files in your user directories like ~/Desktop, ~/Documents, ~/Downloads.**
+
+**When to use:**
+
+- Files already on your computer's filesystem
+- **NOT for files uploaded to Claude Desktop** (use `fix_markdown` instead)
 
 **Example:**
 ```
 "Fix the markdown file at ~/Documents/README.md"
 ```
 
-#### 3. `preview_markdown_fixes`
+#### 3. `preview_markdown_fixes` 👁️ Preview Changes
 Shows what changes would be made without applying them.
+
+**When to use:**
+
+- You want to see changes before applying them
+- Reviewing what markdown-fixer would fix
 
 **Example:**
 ```
@@ -163,6 +179,20 @@ Shows what changes would be made without applying them.
 ```
 
 ### Real-World Examples
+
+#### Fix Uploaded Files (Most Common)
+
+```
+User: [Uploads README.md] Can you fix the markdown formatting in this file?
+
+Claude: [uses fix_markdown tool with the file's content]
+I've fixed the formatting issues in your README.md:
+- Added blank lines around 3 lists
+- Converted 4 consecutive field metadata lines to bullets
+- Collapsed excessive newlines
+
+[Shows fixed content]
+```
 
 #### Fix Generated Content
 
@@ -177,15 +207,14 @@ Claude: [uses fix_markdown tool automatically]
 Here's the fixed version with proper spacing around lists...
 ```
 
-#### Fix Existing Files
+#### Fix Local System Files
 
 ```
-User: Fix the markdown in my docs/api.md file
+User: Fix the markdown file at ~/Documents/notes.md
 
 Claude: [uses fix_markdown_file tool]
-I've fixed the formatting in docs/api.md. The changes include:
-- Added blank lines around 3 lists
-- Converted metadata fields to bullets
+I've fixed the formatting in ~/Documents/notes.md. The changes include:
+- Added blank lines around 2 lists
 - Collapsed excessive newlines
 ```
 
@@ -268,6 +297,29 @@ pip install -e /path/to/markdown-fixer
 ```bash
 chmod +x integrations/mcp-server/server.py
 ```
+
+### Zod Validation Errors
+
+If you see errors like `ZodError: Invalid input` or `Expected string, received null`:
+
+**Cause:** The MCP server is returning responses that don't match Claude Desktop's expected schema.
+
+**Solution:**
+
+1. Make sure you're using the latest version of the MCP server
+2. Restart Claude Desktop completely:
+   ```bash
+   killall Claude
+   # Then reopen Claude Desktop
+   ```
+3. Check that your server.py is up to date (should handle null IDs gracefully)
+
+**Test the server:**
+```bash
+npx @modelcontextprotocol/inspector /absolute/path/to/server.py
+```
+
+This opens a web interface where you can see all requests/responses and verify the server is working correctly.
 
 ## Advanced Configuration
 
