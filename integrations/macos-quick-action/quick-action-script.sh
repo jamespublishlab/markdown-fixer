@@ -14,16 +14,18 @@
 # Set PATH to include common installation locations
 export PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 
-# Try to find markdown-fixer
-if command -v markdown-fixer &> /dev/null; then
-    MARKDOWN_FIXER="markdown-fixer"
-elif [ -f "$HOME/.local/bin/markdown-fixer" ]; then
+# Try to find markdown-fixer in multiple locations
+if [ -f "$HOME/.local/bin/markdown-fixer" ]; then
     MARKDOWN_FIXER="$HOME/.local/bin/markdown-fixer"
+elif [ -f "/opt/homebrew/bin/markdown-fixer" ]; then
+    MARKDOWN_FIXER="/opt/homebrew/bin/markdown-fixer"
 elif [ -f "/usr/local/bin/markdown-fixer" ]; then
     MARKDOWN_FIXER="/usr/local/bin/markdown-fixer"
+elif command -v markdown-fixer &> /dev/null; then
+    MARKDOWN_FIXER="markdown-fixer"
 else
     # Show error notification
-    osascript -e 'display notification "Please install: pipx install markdown-fixer" with title "Markdown Fixer Not Found" sound name "Basso"'
+    osascript -e 'display notification "Please install: pipx install markdown-fixer" with title "Markdown Fixer Not Found" sound name "Basso"' 2>/dev/null || true
     exit 1
 fi
 
@@ -46,12 +48,14 @@ done
 # Show completion notification
 if [ $count -gt 0 ]; then
     if [ $errors -gt 0 ]; then
-        osascript -e "display notification \"Fixed $count file(s), $errors error(s)\" with title \"Markdown Fixer\" sound name \"Glass\""
+        osascript -e "display notification \"Fixed $count file(s), $errors error(s)\" with title \"Markdown Fixer\" sound name \"Glass\"" 2>/dev/null || true
     else
-        osascript -e "display notification \"Fixed $count file(s)\" with title \"Markdown Fixer\" sound name \"Glass\""
+        osascript -e "display notification \"Fixed $count file(s)\" with title \"Markdown Fixer\" sound name \"Glass\"" 2>/dev/null || true
     fi
 elif [ $errors -gt 0 ]; then
-    osascript -e "display notification \"Failed to fix files\" with title \"Markdown Fixer\" sound name \"Basso\""
+    osascript -e "display notification \"Failed to fix files\" with title \"Markdown Fixer\" sound name \"Basso\"" 2>/dev/null || true
 else
-    osascript -e "display notification \"No markdown files selected\" with title \"Markdown Fixer\" sound name \"Basso\""
+    osascript -e "display notification \"No markdown files selected\" with title \"Markdown Fixer\" sound name \"Basso\"" 2>/dev/null || true
 fi
+
+exit 0
