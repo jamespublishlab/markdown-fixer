@@ -75,7 +75,37 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`
 
 Add this configuration:
 
-**Simple method (recommended):**
+**Method 1: pipx (Recommended)**
+
+This is the cleanest approach - pipx creates an isolated environment:
+
+```json
+{
+  "mcpServers": {
+    "markdown-fixer": {
+      "command": "/Users/YOUR_USERNAME/.local/pipx/venvs/markdown-fixer/bin/python3",
+      "args": [
+        "-m",
+        "markdown_fixer.mcp_server"
+      ]
+    }
+  }
+}
+```
+
+**Note:** Replace `YOUR_USERNAME` with your actual username. On Windows, the path is `%USERPROFILE%\.local\pipx\venvs\markdown-fixer\Scripts\python.exe`
+
+**Why this is best:**
+
+- Isolated environment (no conflicts with system Python)
+- Works globally (not tied to project directory)
+- Survives project deletion
+- Clean uninstall with `pipx uninstall markdown-fixer`
+
+**Method 2: System Python (Alternative)**
+
+Only if you've installed to system Python (not recommended):
+
 ```json
 {
   "mcpServers": {
@@ -90,9 +120,12 @@ Add this configuration:
 }
 ```
 
-**Note:** On Windows, use `"python"` instead of `"python3"`.
+**Note:** This only works if markdown-fixer is in your system Python packages
 
-**Alternative method (using server.py path):**
+**Method 3: Development Mode (Source Path)**
+
+Only use this if you're actively developing the MCP server code:
+
 ```json
 {
   "mcpServers": {
@@ -108,6 +141,11 @@ Add this configuration:
   }
 }
 ```
+
+**When to use this:**
+
+- You're modifying the MCP server code
+- You want to test changes before installing
 
 **Important:** Replace `/absolute/path/to/markdown-fixer` with the actual path.
 

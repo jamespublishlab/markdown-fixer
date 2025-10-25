@@ -96,9 +96,14 @@ Claude: [Uses markdown-fixer tool]
    - Mac: Press `Command + Space`, type `terminal`, press Enter
    - Windows: Press Windows key, type `cmd`, press Enter
 
-2. Copy this command (click to select, then press Cmd+C or Ctrl+C):
+2. **For Mac**, copy this command:
    ```bash
-   pip3 install markdown-fixer
+   pip3 install --user markdown-fixer
+   ```
+
+   **For Windows**, copy this command:
+   ```bash
+   pip install --user markdown-fixer
    ```
 
 3. **Paste** it into the Terminal window (right-click → Paste, or Cmd+V / Ctrl+V)
@@ -110,6 +115,8 @@ Claude: [Uses markdown-fixer tool]
 6. When it's done, you'll see your prompt again (might say something like `~ %` or `C:\Users\YourName>`)
 
 7. **Don't close the Terminal yet!** We need it for one more step.
+
+**Note:** The `--user` flag installs markdown-fixer for your user account only (safer than system-wide install).
 
 ### Step 4: Find Your Claude Desktop Config File
 
