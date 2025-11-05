@@ -27,6 +27,7 @@ classifiers = [
 
 dependencies = [
     "click>=8.0",
+    "wcwidth>=0.2.0",
 ]
 
 [project.optional-dependencies]

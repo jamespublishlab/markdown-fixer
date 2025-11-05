@@ -7,6 +7,8 @@ A native JetBrains IDE plugin that automatically fixes common markdown formattin
 - **Proper List Spacing**: Adds blank lines before and after lists for better readability
 - **Field Metadata Conversion**: Converts consecutive field-style metadata (`**Key:** value`) to bulleted lists
 - **Newline Collapsing**: Collapses 3+ consecutive blank lines to exactly 2
+- **Table Formatting**: Automatically formats markdown tables with proper alignment and column widths
+- **Unicode Support**: Handles CJK characters (中文, 日本語), emoji (😀, ✅), and other wide characters in tables
 - **Code Block Preservation**: Never modifies content inside code blocks
 
 ## Supported IDEs

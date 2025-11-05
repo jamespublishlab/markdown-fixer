@@ -5,7 +5,13 @@ Core markdown formatting logic.
 
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Tuple
+
+try:
+    import wcwidth
+    HAS_WCWIDTH = True
+except ImportError:
+    HAS_WCWIDTH = False
 
 
 class MarkdownFixer:
@@ -92,6 +98,20 @@ class MarkdownFixer:
             if in_code_block:
                 result.append(line)
                 i += 1
+                continue
+
+            # Check if this is the start of a table
+            if self._is_table_row(line) and i + 1 < len(lines) and self._is_delimiter_row(lines[i + 1]):
+                # Flush any pending field metadata before table
+                if field_metadata_buffer:
+                    self._flush_field_metadata(result, field_metadata_buffer, lines, i)
+                    field_metadata_buffer = []
+
+                # Extract and format the entire table
+                table_lines, table_end_idx = self._extract_table(lines, i)
+                formatted_table = self._format_table(table_lines)
+                result.extend(formatted_table)
+                i = table_end_idx + 1
                 continue
 
             # Check if this is field-style metadata
@@ -206,3 +226,217 @@ class MarkdownFixer:
         """Check if line is a code fence (```...)."""
         stripped = line.strip()
         return stripped.startswith('```') or stripped.startswith('~~~')
+
+    # ========== Table Formatting Methods ==========
+
+    @staticmethod
+    def _is_table_row(line: str) -> bool:
+        """Check if a line contains pipes and looks like a table row."""
+        stripped = line.strip()
+        # Must have at least one pipe (even without leading/trailing pipes)
+        # Avoid matching other pipe-like content
+        return '|' in stripped and not stripped.startswith('>')
+
+    @staticmethod
+    def _is_delimiter_row(line: str) -> bool:
+        """Check if a line is a table delimiter row (contains dashes and pipes)."""
+        stripped = line.strip()
+        # Must contain pipes and dashes, and optionally colons for alignment
+        # Pattern: |---|--:|:--:|
+        return bool(re.match(r'^\|?[\s:]*-+[\s:]*(\|[\s:]*-+[\s:]*)+\|?\s*$', stripped))
+
+    def _extract_table(self, lines: List[str], start_idx: int) -> Tuple[List[str], int]:
+        """
+        Extract a complete table starting from start_idx.
+
+        Returns:
+            Tuple of (table_lines, end_index)
+        """
+        table_lines = []
+        i = start_idx
+
+        # Collect all consecutive table rows
+        while i < len(lines) and self._is_table_row(lines[i]):
+            table_lines.append(lines[i])
+            i += 1
+
+        # End index is the last line that was part of the table
+        return table_lines, i - 1
+
+    def _parse_table_row(self, line: str) -> List[str]:
+        """
+        Parse a table row, splitting on unescaped pipes.
+
+        Returns list of cell contents with whitespace stripped.
+        """
+        # Split on pipes that aren't preceded by backslash
+        cells = re.split(r'(?<!\\)\|', line)
+
+        # Strip whitespace from each cell
+        cells = [cell.strip() for cell in cells]
+
+        # Remove leading/trailing empty cells (from leading/trailing pipes)
+        if cells and not cells[0]:
+            cells = cells[1:]
+        if cells and not cells[-1]:
+            cells = cells[:-1]
+
+        return cells
+
+    def _parse_alignments(self, delimiter_row: List[str]) -> List[str]:
+        """
+        Parse alignment from delimiter row cells.
+
+        Returns list of 'left', 'center', or 'right' for each column.
+        """
+        alignments = []
+        for cell in delimiter_row:
+            cell = cell.strip()
+            if cell.startswith(':') and cell.endswith(':'):
+                alignments.append('center')
+            elif cell.endswith(':'):
+                alignments.append('right')
+            else:
+                alignments.append('left')
+        return alignments
+
+    def _display_width(self, text: str) -> int:
+        """
+        Calculate display width of text, accounting for Unicode, CJK, and emoji.
+        """
+        if HAS_WCWIDTH:
+            # Use wcwidth for accurate Unicode width calculation
+            return sum(max(wcwidth.wcwidth(char), 0) for char in text)
+        else:
+            # Fallback: simple length (ASCII-only)
+            return len(text)
+
+    def _calculate_column_widths(self, rows: List[List[str]], delimiter_idx: int) -> List[int]:
+        """
+        Calculate the maximum display width for each column.
+
+        Args:
+            rows: All table rows (including delimiter)
+            delimiter_idx: Index of delimiter row (usually 1)
+
+        Returns:
+            List of column widths
+        """
+        if not rows:
+            return []
+
+        num_cols = len(rows[0])
+        widths = [0] * num_cols
+
+        for i, row in enumerate(rows):
+            # Ensure row has enough cells (pad with empty if needed)
+            while len(row) < num_cols:
+                row.append('')
+
+            # Skip delimiter row for content width calculation
+            if i == delimiter_idx:
+                continue
+
+            for j in range(num_cols):
+                if j < len(row):
+                    widths[j] = max(widths[j], self._display_width(row[j]))
+
+        # Ensure minimum width of 3 for delimiter
+        widths = [max(w, 3) for w in widths]
+
+        return widths
+
+    def _format_table_row(self, cells: List[str], widths: List[int], alignments: List[str]) -> str:
+        """
+        Format a data row with proper alignment and padding.
+        """
+        formatted_cells = []
+
+        for i, cell in enumerate(cells):
+            if i >= len(widths):
+                break
+
+            width = widths[i]
+            align = alignments[i] if i < len(alignments) else 'left'
+
+            # Calculate padding needed
+            cell_width = self._display_width(cell)
+            padding_needed = width - cell_width
+
+            if align == 'left':
+                formatted = cell + ' ' * padding_needed
+            elif align == 'right':
+                formatted = ' ' * padding_needed + cell
+            else:  # center
+                left_pad = padding_needed // 2
+                right_pad = padding_needed - left_pad
+                formatted = ' ' * left_pad + cell + ' ' * right_pad
+
+            formatted_cells.append(formatted)
+
+        return '| ' + ' | '.join(formatted_cells) + ' |'
+
+    def _format_delimiter_row(self, widths: List[int], alignments: List[str]) -> str:
+        """
+        Format the delimiter row with alignment markers matching column widths.
+        """
+        delimiters = []
+
+        for i, width in enumerate(widths):
+            align = alignments[i] if i < len(alignments) else 'left'
+
+            if align == 'left':
+                delim = ':' + '-' * (width + 1)  # Add extra dash to account for space
+            elif align == 'right':
+                delim = '-' * (width + 1) + ':'  # Add extra dash to account for space
+            else:  # center
+                delim = ':' + '-' * width + ':'
+
+            delimiters.append(delim)
+
+        return '|' + '|'.join(delimiters) + '|'
+
+    def _format_table(self, table_lines: List[str]) -> List[str]:
+        """
+        Format an entire table with proper alignment and column widths.
+
+        Args:
+            table_lines: List of raw table row strings
+
+        Returns:
+            List of formatted table row strings
+        """
+        if len(table_lines) < 2:
+            # Not a valid table (need at least header + delimiter)
+            return table_lines
+
+        # Parse all rows
+        rows = [self._parse_table_row(line) for line in table_lines]
+
+        # Ensure all rows have the same number of columns (pad with empty cells)
+        num_cols = len(rows[0]) if rows else 0
+        for row in rows:
+            while len(row) < num_cols:
+                row.append('')
+            # Truncate extra cells
+            if len(row) > num_cols:
+                row[:] = row[:num_cols]
+
+        # Parse alignments from delimiter row (index 1)
+        delimiter_idx = 1
+        alignments = self._parse_alignments(rows[delimiter_idx])
+
+        # Calculate column widths (excluding delimiter)
+        widths = self._calculate_column_widths(rows, delimiter_idx)
+
+        # Format each row
+        formatted = []
+        for i, row in enumerate(rows):
+            if i == delimiter_idx:
+                # Format delimiter row
+                formatted.append(self._format_delimiter_row(widths, alignments))
+            else:
+                # Format data row
+                formatted.append(self._format_table_row(row, widths, alignments))
+
+        return formatted

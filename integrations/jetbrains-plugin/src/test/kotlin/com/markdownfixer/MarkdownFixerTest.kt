@@ -305,4 +305,233 @@ Text"""
 
         assertEquals(expected, fixer.fixString(input))
     }
+
+    // ========== Table Formatting Tests ==========
+
+    @Test
+    fun testSimpleTableFormatting() {
+        val input = """| Header 1|Header 2|Header 3|
+|---|---|---|
+|val1|val2|val3|
+|longer value|v2|v3|"""
+
+        val expected = """| Header 1     | Header 2 | Header 3 |
+|:-------------|:---------|:---------|
+| val1         | val2     | val3     |
+| longer value | v2       | v3       |"""
+
+        assertEquals(expected, fixer.fixString(input))
+    }
+
+    @Test
+    fun testTableWithAlignment() {
+        val input = """| Left|Center|Right|
+|:---|:---:|---:|
+|Text|Text|Text|"""
+
+        val expected = """| Left | Center | Right |
+|:-----|:------:|------:|
+| Text |  Text  |  Text |"""
+
+        assertEquals(expected, fixer.fixString(input))
+    }
+
+    @Test
+    fun testTableWithVaryingWidths() {
+        val input = """| Short|Medium length|Very long column content here|
+|---|---|---|
+|A|B|C|"""
+
+        val expected = """| Short | Medium length | Very long column content here |
+|:------|:--------------|:------------------------------|
+| A     | B             | C                             |"""
+
+        assertEquals(expected, fixer.fixString(input))
+    }
+
+    @Test
+    fun testTableWithEmoji() {
+        val input = """| Feature|Status|Notes|
+|---|---|---|
+|Tables|✅|Works|
+|Emoji 😀|✅|Full support|"""
+
+        val result = fixer.fixString(input)
+
+        // Should format properly (emoji counts as 2 columns width with icu4j)
+        assert(result.contains("✅"))
+        assert(result.contains("😀"))
+        assert(result.contains("|"))
+    }
+
+    @Test
+    fun testTableWithCjkCharacters() {
+        val input = """| Product|Price|
+|---|---|
+|Coffee|${'$'}3.50|
+|咖啡|¥25|"""
+
+        val result = fixer.fixString(input)
+
+        // Should format properly with CJK characters
+        assert(result.contains("Coffee"))
+        assert(result.contains("咖啡"))
+        assert(result.contains("|"))
+    }
+
+    @Test
+    fun testTableWithEmptyCells() {
+        val input = """| Col1|Col2|Col3|
+|---|---|---|
+|A|B||
+|X||Z|"""
+
+        val expected = """| Col1 | Col2 | Col3 |
+|:-----|:-----|:-----|
+| A    | B    |      |
+| X    |      | Z    |"""
+
+        assertEquals(expected, fixer.fixString(input))
+    }
+
+    @Test
+    fun testMalformedTableMissingCells() {
+        val input = """| Col1|Col2|Col3|
+|---|---|---|
+|A|B|
+|X|"""
+
+        // Should pad missing cells with empty
+        val result = fixer.fixString(input)
+
+        // Should have three pipes per row
+        val lines = result.split('\n')
+        for (line in lines) {
+            assertEquals(4, line.count { it == '|' })  // 4 pipes = 3 columns
+        }
+    }
+
+    @Test
+    fun testMalformedTableExtraCells() {
+        val input = """| A|B|C|
+|---|---|---|
+|1|2|3|4|5|"""
+
+        // Should truncate extra cells
+        val result = fixer.fixString(input)
+
+        // Should have three columns only
+        val lines = result.split('\n')
+        for (line in lines) {
+            assertEquals(4, line.count { it == '|' })  // 4 pipes = 3 columns
+        }
+    }
+
+    @Test
+    fun testTableInCodeBlockUntouched() {
+        val input = """Here's a table in code:
+
+```markdown
+|Unformatted|Table|
+|---|---|
+|stays|unformatted|
+```
+
+End"""
+
+        val result = fixer.fixString(input)
+
+        // Table inside code block should NOT be formatted
+        assert(result.contains("|Unformatted|Table|"))
+        assert(result.contains("|stays|unformatted|"))
+    }
+
+    @Test
+    fun testMultipleTablesInDocument() {
+        val input = """# Document
+
+| Table1|Col2|
+|---|---|
+|A|B|
+
+Some text
+
+| Table2|Col2|Col3|
+|---|---|---|
+|X|Y|Z|"""
+
+        val result = fixer.fixString(input)
+
+        // Both tables should be formatted
+        assert(result.contains("| Table1 |"))
+        assert(result.contains("| Table2 |"))
+    }
+
+    @Test
+    fun testNoTablePresent() {
+        val input = """# Regular Document
+
+This has no tables.
+
+Just some text with | a pipe | character."""
+
+        val result = fixer.fixString(input)
+
+        // Should remain unchanged (pipe character alone doesn't make a table)
+        assertEquals(input, result)
+    }
+
+    @Test
+    fun testTableFormattingRealWorld() {
+        val input = """# API Documentation
+
+| Endpoint|Method|Description|
+|---|:---:|---|
+|/users|GET|List all users|
+|/users/:id|GET|Get specific user|
+|/users|POST|Create new user|"""
+
+        val result = fixer.fixString(input)
+
+        // Should format with proper alignment
+        val lines = result.split('\n')
+        val tableLines = lines.filter { it.contains('|') }
+
+        // Check header row formatted (index 0)
+        assert(tableLines[0].contains("Endpoint"))
+        assert(tableLines[0].contains("Method"))
+        assert(tableLines[0].contains("Description"))
+
+        // Check center alignment preserved for Method column in delimiter (index 1)
+        assert(tableLines[1].contains(":------:") || tableLines[1].contains(":-----:"))
+    }
+
+    @Test
+    fun testTableWithEscapedPipes() {
+        val input = """| Expression|Meaning|
+|---|---|
+|a \| b|Logical OR|"""
+
+        val result = fixer.fixString(input)
+
+        // Escaped pipe should be preserved
+        assert(result.contains("a \\| b"))
+    }
+
+    @Test
+    fun testTableMixedUnicode() {
+        val input = """| Item|Price|Status|
+|---|---:|:---:|
+|Coffee ☕|${'$'}3.50|✅|
+|Tea 🍵|${'$'}2.50|✅|
+|水|¥5|✅|"""
+
+        val result = fixer.fixString(input)
+
+        // Should handle mixed ASCII, emoji, and CJK
+        assert(result.contains("☕"))
+        assert(result.contains("🍵"))
+        assert(result.contains("水"))
+        assert(result.contains("✅"))
+    }
 }

@@ -29,6 +29,9 @@ dependencies {
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
     }
 
+    // Unicode width calculation for table formatting
+    implementation("com.ibm.icu:icu4j:74.2")
+
     testImplementation("junit:junit:4.13.2")
 }
 
@@ -50,6 +53,8 @@ intellijPlatform {
             - Converts consecutive field-style metadata to bulleted lists
             - Collapses excessive newlines
             - Preserves code blocks and blockquotes
+            - Formats markdown tables with proper alignment and column widths
+            - Supports Unicode, CJK characters, and emoji in tables
         """.trimIndent()
 
         changeNotes = """
@@ -58,6 +63,8 @@ intellijPlatform {
                 <li>Initial release</li>
                 <li>Core markdown formatting functionality</li>
                 <li>Right-click action for markdown files</li>
+                <li>Table formatting with automatic column width calculation</li>
+                <li>Unicode, CJK, and emoji support in tables</li>
             </ul>
         """.trimIndent()
     }

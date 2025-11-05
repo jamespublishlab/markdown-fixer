@@ -247,6 +247,221 @@ End of section."""
         assert "\n\n\n" not in result
 
 
+class TestTableFormatting:
+    """Test markdown table formatting."""
+
+    def test_simple_table_formatting(self):
+        input_md = """| Header 1|Header 2|Header 3|
+|---|---|---|
+|val1|val2|val3|
+|longer value|v2|v3|"""
+
+        expected = """| Header 1     | Header 2 | Header 3 |
+|:-------------|:---------|:---------|
+| val1         | val2     | val3     |
+| longer value | v2       | v3       |"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_table_with_alignment(self):
+        input_md = """| Left|Center|Right|
+|:---|:---:|---:|
+|Text|Text|Text|"""
+
+        expected = """| Left | Center | Right |
+|:-----|:------:|------:|
+| Text |  Text  |  Text |"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_table_with_varying_widths(self):
+        input_md = """| Short|Medium length|Very long column content here|
+|---|---|---|
+|A|B|C|"""
+
+        expected = """| Short | Medium length | Very long column content here |
+|:------|:--------------|:------------------------------|
+| A     | B             | C                             |"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_table_with_emoji(self):
+        input_md = """| Feature|Status|Notes|
+|---|---|---|
+|Tables|✅|Works|
+|Emoji 😀|✅|Full support|"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should format properly (emoji counts as 2 columns width with wcwidth)
+        assert "✅" in result
+        assert "😀" in result
+        assert "|" in result
+
+    def test_table_with_cjk_characters(self):
+        input_md = """| Product|Price|
+|---|---|
+|Coffee|$3.50|
+|咖啡|¥25|"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should format properly with CJK characters
+        assert "Coffee" in result
+        assert "咖啡" in result
+        assert "|" in result
+
+    def test_table_with_empty_cells(self):
+        input_md = """| Col1|Col2|Col3|
+|---|---|---|
+|A|B||
+|X||Z|"""
+
+        expected = """| Col1 | Col2 | Col3 |
+|:-----|:-----|:-----|
+| A    | B    |      |
+| X    |      | Z    |"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_malformed_table_missing_cells(self):
+        input_md = """| Col1|Col2|Col3|
+|---|---|---|
+|A|B|
+|X|"""
+
+        # Should pad missing cells with empty
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should have three pipes per row
+        lines = result.split('\n')
+        for line in lines:
+            assert line.count('|') == 4  # 4 pipes = 3 columns
+
+    def test_malformed_table_extra_cells(self):
+        input_md = """| A|B|C|
+|---|---|---|
+|1|2|3|4|5|"""
+
+        # Should truncate extra cells
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should have three columns only
+        lines = result.split('\n')
+        for line in lines:
+            assert line.count('|') == 4  # 4 pipes = 3 columns
+
+    def test_table_in_code_block_untouched(self):
+        input_md = """Here's a table in code:
+
+```markdown
+|Unformatted|Table|
+|---|---|
+|stays|unformatted|
+```
+
+End"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Table inside code block should NOT be formatted
+        assert "|Unformatted|Table|" in result
+        assert "|stays|unformatted|" in result
+
+    def test_multiple_tables_in_document(self):
+        input_md = """# Document
+
+| Table1|Col2|
+|---|---|
+|A|B|
+
+Some text
+
+| Table2|Col2|Col3|
+|---|---|---|
+|X|Y|Z|"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Both tables should be formatted
+        assert "| Table1 |" in result
+        assert "| Table2 |" in result
+
+    def test_no_table_present(self):
+        input_md = """# Regular Document
+
+This has no tables.
+
+Just some text with | a pipe | character."""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should remain unchanged (pipe character alone doesn't make a table)
+        assert result == input_md
+
+    def test_table_formatting_real_world(self):
+        input_md = """# API Documentation
+
+| Endpoint|Method|Description|
+|---|:---:|---|
+|/users|GET|List all users|
+|/users/:id|GET|Get specific user|
+|/users|POST|Create new user|"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should format with proper alignment
+        lines = result.split('\n')
+        table_lines = [l for l in lines if '|' in l]
+
+        # Check header row formatted (index 0)
+        assert "Endpoint" in table_lines[0]
+        assert "Method" in table_lines[0]
+        assert "Description" in table_lines[0]
+
+        # Check center alignment preserved for Method column in delimiter (index 1)
+        assert ":------:" in table_lines[1] or ":-----:" in table_lines[1]
+
+    def test_table_with_escaped_pipes(self):
+        input_md = r"""| Expression|Meaning|
+|---|---|
+|a \| b|Logical OR|"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Escaped pipe should be preserved
+        assert r"a \| b" in result
+
+    def test_table_mixed_unicode(self):
+        input_md = """| Item|Price|Status|
+|---|---:|:---:|
+|Coffee ☕|$3.50|✅|
+|Tea 🍵|$2.50|✅|
+|水|¥5|✅|"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should handle mixed ASCII, emoji, and CJK
+        assert "☕" in result
+        assert "🍵" in result
+        assert "水" in result
+        assert "✅" in result
+
+
 class TestFileOperations:
     """Test file reading and writing."""
 

@@ -63,6 +63,8 @@ Too many blank lines
 - **Blank lines around lists** - Adds proper spacing
 - **Field metadata conversion** - Converts `**Key:** value` pairs to bullets
 - **Newline normalization** - Collapses 3+ blank lines to 2
+- **Table formatting** - Automatically formats markdown tables with proper alignment and column widths
+- **Unicode support** - Handles CJK characters, emoji, and other wide characters in tables
 - **Code-block aware** - Never modifies code blocks
 - **Multi-platform** - CLI, macOS Quick Action, drag-drop app, JetBrains plugin
 
@@ -249,7 +251,33 @@ Section 1
 Section 2
 ```
 
-### 4. Smart Context Awareness
+### 4. Table Formatting
+
+**Problem:** Inconsistent column widths and alignment
+
+```markdown
+| Name|Age|City|
+|---|---|---|
+|Alice|25|New York|
+|Bob|30|London|
+```
+
+**Fixed:**
+```markdown
+| Name  | Age | City     |
+|:------|:----|:---------|
+| Alice | 25  | New York |
+| Bob   | 30  | London   |
+```
+
+**Features:**
+- Automatic column width calculation based on content
+- Preserves left/center/right alignment markers
+- Handles Unicode, CJK characters (中文, 日本語), and emoji (😀, ✅)
+- Best-effort handling of malformed tables (missing/extra cells)
+- Tables in code blocks are never modified
+
+### 5. Smart Context Awareness
 
 **Never modifies:**
 

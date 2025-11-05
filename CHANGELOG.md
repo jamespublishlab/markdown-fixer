@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Table Formatting**: Automatically formats markdown tables with proper alignment and column widths
+- **Unicode Support**: Full support for CJK characters (中文, 日本語) and emoji (😀, ✅) in tables
+- **Native JetBrains Plugin**: Complete rewrite as a native IntelliJ Platform plugin (replaces external tool)
 - Claude Desktop MCP Server integration (Model Context Protocol)
 - Claude Code skill for AI-guided markdown fixing
 - Claude Code auto-fix hook (fixes markdown on save)
@@ -18,10 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improved
 
-- README now has prominent getting started link at top
+- Table formatting uses `wcwidth` (Python) and `icu4j` (Kotlin) for accurate Unicode width calculation
+- JetBrains plugin now works via right-click in both Project View and Editor
 - Better documentation navigation and discoverability
 - Cross-references between all documentation files
 - Documentation section in README with all guides linked
+
+### Fixed
+
+- Delimiter row formatting now correctly accounts for cell padding in tables
+- Escaped pipes (`\|`) are now preserved in table cells
 
 ## [1.0.0] - 2025-10-25
 
