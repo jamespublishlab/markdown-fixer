@@ -76,11 +76,8 @@ Multiple blank lines above
                 description="Fixes common markdown formatting issues (lists, metadata, newlines)"
                 icon="AllIcons.Actions.Edit">
 
-            <!-- Project View context menus (right-click on file in project tree) -->
+            <!-- Project View context menu (right-click on file in project tree) -->
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
-            <add-to-group group-id="ProjectViewPopupMenuModifyGroup" anchor="last"/>
-            <add-to-group group-id="ProjectViewPopupMenuRefactoringGroup" anchor="last"/>
-            <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
 
             <!-- Editor tab context menu (right-click on editor tab) -->
             <add-to-group group-id="EditorTabPopupMenu" anchor="last"/>
