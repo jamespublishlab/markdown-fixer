@@ -174,11 +174,37 @@ pip install -e ".[dev]"
 
 ### Code Quality
 
+The project uses these tools to maintain code quality:
+
+| Tool | Purpose | Command |
+|------|---------|---------|
+| **black** | Code formatting | `black src/ tests/` |
+| **ruff** | Linting (unused imports, etc.) | `ruff check src/ tests/` |
+| **mypy** | Type checking | `mypy src/` |
+
+**Check before committing:**
+
 ```bash
-black src/ tests/               # Format code
-ruff check src/ tests/          # Lint
-mypy src/                       # Type check
+# Check formatting (no changes)
+black --check src/ tests/
+
+# Check linting
+ruff check src/ tests/
+
+# Auto-fix issues
+black src/ tests/
+ruff check src/ tests/ --fix
 ```
+
+**Install dev tools:**
+
+```bash
+pip install -e ".[dev]"
+# or individually:
+pip install black ruff mypy pytest
+```
+
+CI runs these checks on every PR - run locally first to catch issues early.
 
 ### Making Changes
 
