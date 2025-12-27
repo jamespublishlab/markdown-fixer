@@ -1,6 +1,5 @@
 """Tests for core markdown fixing functionality."""
 
-import pytest
 from markdown_fixer import MarkdownFixer
 
 
@@ -353,14 +352,6 @@ code
 ```
 Text"""
 
-        expected = """- List item
-
-```
-code
-```
-
-Text"""
-
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         # Should have blank line after list and before text
@@ -623,7 +614,7 @@ Just some text with | a pipe | character."""
 
         # Should format with proper alignment
         lines = result.split('\n')
-        table_lines = [l for l in lines if '|' in l]
+        table_lines = [line for line in lines if '|' in line]
 
         # Check header row formatted (index 0)
         assert "Endpoint" in table_lines[0]

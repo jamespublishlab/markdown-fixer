@@ -20,7 +20,7 @@ if _integrations_path.exists():
     sys.path.insert(0, str(_integrations_path))
 
 # Import and re-export from canonical location
-from server import MarkdownFixerMCPServer, main
+from server import MarkdownFixerMCPServer, main  # noqa: E402
 
 __all__ = ["MarkdownFixerMCPServer", "main"]
 

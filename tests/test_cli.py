@@ -1,8 +1,7 @@
 """Tests for CLI functionality."""
 
-import pytest
 from click.testing import CliRunner
-from pathlib import Path
+
 from markdown_fixer.cli import main
 
 
