@@ -4,6 +4,165 @@ import pytest
 from markdown_fixer import MarkdownFixer
 
 
+class TestHeadingFormatting:
+    """Test blank lines around headings."""
+
+    def test_blank_line_before_heading(self):
+        input_md = """Some text
+# Header"""
+
+        expected = """Some text
+
+# Header"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_blank_line_after_heading(self):
+        input_md = """# Header
+Some text"""
+
+        expected = """# Header
+
+Some text"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_blank_lines_both_sides_of_heading(self):
+        input_md = """First paragraph
+## Section
+Content here"""
+
+        expected = """First paragraph
+
+## Section
+
+Content here"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_heading_at_start_no_blank_before(self):
+        """First line heading should not have blank line before."""
+        input_md = """# Title
+Some text"""
+
+        expected = """# Title
+
+Some text"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_multiple_headings(self):
+        input_md = """# Title
+Intro text
+## Section 1
+Content 1
+## Section 2
+Content 2"""
+
+        expected = """# Title
+
+Intro text
+
+## Section 1
+
+Content 1
+
+## Section 2
+
+Content 2"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+
+class TestHorizontalRuleRemoval:
+    """Test removal of horizontal rules."""
+
+    def test_remove_triple_dash(self):
+        input_md = """First section
+---
+Second section"""
+
+        expected = """First section
+
+Second section"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_remove_many_dashes(self):
+        input_md = """First
+----------
+Second"""
+
+        expected = """First
+
+Second"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_remove_asterisk_rule(self):
+        input_md = """First
+***
+Second"""
+
+        expected = """First
+
+Second"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_remove_underscore_rule(self):
+        input_md = """First
+___
+Second"""
+
+        expected = """First
+
+Second"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_remove_spaced_rule(self):
+        input_md = """First
+- - -
+Second"""
+
+        expected = """First
+
+Second"""
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == expected
+
+    def test_preserve_dashes_in_code_block(self):
+        """Horizontal rules inside code blocks should not be removed."""
+        input_md = """```
+---
+```"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert "---" in result
+
+    def test_dont_remove_list_item(self):
+        """A line starting with dash and space is a list item, not a rule."""
+        input_md = """- Item 1
+- Item 2"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert "- Item 1" in result
+        assert "- Item 2" in result
+
+
 class TestListFormatting:
     """Test blank lines around lists."""
 
@@ -206,6 +365,46 @@ Text"""
         result = fixer.fix_string(input_md)
         # Should have blank line after list and before text
         assert result.count('\n\n') >= 2
+
+
+class TestBlockquoteHandling:
+    """Test that blockquotes are handled correctly."""
+
+    def test_blockquote_content_not_converted(self):
+        """Field-style content in blockquotes should not be converted to lists."""
+        input_md = """> **Note:** This is a callout
+> **Warning:** Another callout"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Content should remain as blockquotes, not converted to bullets
+        assert "> **Note:**" in result
+        assert "> **Warning:**" in result
+        # Should NOT be converted to bullet lists
+        assert "- **Note:**" not in result
+
+    def test_list_before_blockquote(self):
+        """Ensure blank line between list and blockquote."""
+        input_md = """- List item
+> Blockquote"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should have blank line between list and blockquote
+        assert "- List item\n\n>" in result
+
+    def test_blockquote_before_list(self):
+        """Blockquote followed by list should work correctly."""
+        input_md = """> Quote text
+- List item"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+
+        # Should have blank line between blockquote and list
+        assert "> Quote text\n\n- List item" in result
 
 
 class TestComplexCombinations:

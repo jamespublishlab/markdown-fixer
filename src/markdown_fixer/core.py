@@ -75,12 +75,27 @@ class MarkdownFixer:
         lines = content.split('\n')
         result = []
         in_code_block = False
+        just_exited_block = False  # Track if we just exited a block element
         in_list = False
         field_metadata_buffer = []
         i = 0
 
+        def ensure_blank_before():
+            """Add blank line before current element if needed."""
+            if result and result[-1].strip():
+                result.append('')
+
         while i < len(lines):
             line = lines[i]
+
+            # Skip horizontal rules (remove them, but maintain spacing)
+            if not in_code_block and self._is_horizontal_rule(line):
+                # Add a blank line if we're not already at a blank line
+                # This maintains document structure when rules are removed
+                if result and result[-1].strip():
+                    result.append('')
+                i += 1
+                continue
 
             # Track code blocks (don't process their content)
             if self._is_code_fence(line):
@@ -88,6 +103,17 @@ class MarkdownFixer:
                 if field_metadata_buffer:
                     self._flush_field_metadata(result, field_metadata_buffer, lines, i)
                     field_metadata_buffer = []
+
+                # End list if we were in one
+                if in_list:
+                    in_list = False
+
+                if not in_code_block:
+                    # Opening code fence - ensure blank line before
+                    ensure_blank_before()
+                else:
+                    # Closing code fence - mark that we just exited a block
+                    just_exited_block = True
 
                 in_code_block = not in_code_block
                 result.append(line)
@@ -100,6 +126,31 @@ class MarkdownFixer:
                 i += 1
                 continue
 
+            # Add blank line after block element if followed by content
+            if just_exited_block:
+                just_exited_block = False
+                if line.strip():  # Non-blank line after block
+                    result.append('')
+
+            # Check if this is a heading
+            if self._is_heading(line):
+                # Flush any pending field metadata
+                if field_metadata_buffer:
+                    self._flush_field_metadata(result, field_metadata_buffer, lines, i)
+                    field_metadata_buffer = []
+
+                # End list if we were in one
+                if in_list:
+                    in_list = False
+
+                # Ensure blank line before heading
+                ensure_blank_before()
+                result.append(line)
+                # Mark that next content needs blank line before it
+                just_exited_block = True
+                i += 1
+                continue
+
             # Check if this is the start of a table
             if self._is_table_row(line) and i + 1 < len(lines) and self._is_delimiter_row(lines[i + 1]):
                 # Flush any pending field metadata before table
@@ -107,10 +158,19 @@ class MarkdownFixer:
                     self._flush_field_metadata(result, field_metadata_buffer, lines, i)
                     field_metadata_buffer = []
 
+                # End list if we were in one
+                if in_list:
+                    in_list = False
+
+                # Ensure blank line before table
+                ensure_blank_before()
+
                 # Extract and format the entire table
                 table_lines, table_end_idx = self._extract_table(lines, i)
                 formatted_table = self._format_table(table_lines)
                 result.extend(formatted_table)
+                # Mark that next content needs blank line before it
+                just_exited_block = True
                 i = table_end_idx + 1
                 continue
 
@@ -144,8 +204,7 @@ class MarkdownFixer:
 
             if is_list_line and not in_list:
                 # Starting a list - ensure blank line before
-                if result and result[-1].strip():
-                    result.append('')
+                ensure_blank_before()
                 in_list = True
                 result.append(line)
 
@@ -226,6 +285,29 @@ class MarkdownFixer:
         """Check if line is a code fence (```...)."""
         stripped = line.strip()
         return stripped.startswith('```') or stripped.startswith('~~~')
+
+    @staticmethod
+    def _is_heading(line: str) -> bool:
+        """Check if line is a markdown heading (# Header)."""
+        stripped = line.strip()
+        # Match # followed by space, or ## followed by space, etc.
+        return bool(re.match(r'^#{1,6}\s+\S', stripped))
+
+    @staticmethod
+    def _is_horizontal_rule(line: str) -> bool:
+        """Check if line is a horizontal rule (---, ***, ___ with 3+ chars)."""
+        stripped = line.strip()
+        # Match lines that are only dashes, asterisks, or underscores (3 or more)
+        # May have spaces between them
+        if len(stripped) < 3:
+            return False
+        # Remove spaces and check if all remaining chars are the same rule char
+        no_spaces = stripped.replace(' ', '')
+        if len(no_spaces) < 3:
+            return False
+        return (all(c == '-' for c in no_spaces) or
+                all(c == '*' for c in no_spaces) or
+                all(c == '_' for c in no_spaces))
 
     # ========== Table Formatting Methods ==========
 
