@@ -4,14 +4,7 @@ Choose the installation method that works best for your workflow.
 
 ## Quick Install
 
-### Homebrew (macOS, Recommended)
-
-```bash
-brew tap jamespublishlab/tap
-brew install markdown-fixer
-```
-
-### pipx (All Platforms)
+### pipx (Recommended)
 
 ```bash
 pipx install markdown-fixer

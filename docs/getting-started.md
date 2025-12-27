@@ -10,7 +10,7 @@ Get up and running with markdown-fixer in under 5 minutes.
 pip install markdown-fixer
 ```
 
-**Other options:** See [Installation Guide](installation.md) for Homebrew, pipx, and more.
+**Other options:** See [Installation Guide](installation.md) for pipx, from source, and more.
 
 ## Step 2: Fix Your First File
 

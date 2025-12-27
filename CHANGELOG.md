@@ -31,7 +31,6 @@ Initial release of markdown-fixer.
 ### Installation
 
 - Python package via pip/pipx
-- Homebrew formula (`brew tap jamespublishlab/tap`)
 - Universal installer script for macOS
 
 ### Documentation

@@ -14,7 +14,7 @@ Complete guide to markdown-fixer documentation.
 
 ### Installation & Usage
 
-- **[Installation](installation.md)** - Homebrew, pipx, pip, from source
+- **[Installation](installation.md)** - pipx, pip, from source
 - **[Usage Guide](usage.md)** - CLI commands, options, Python library
 - **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
