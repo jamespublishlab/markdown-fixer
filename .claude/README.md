@@ -39,12 +39,12 @@ A comprehensive Claude Code skill that provides intelligent markdown fixing work
 
 ### 3. Auto-Fix Hook (`hooks/`)
 
-Automatically fixes markdown files after edits.
+Automatically fixes markdown files after Claude writes or edits them.
 
 **How it works:**
 
-- Triggers after each prompt submission
-- Detects modified markdown files
+- Triggers after Write/Edit tools complete (PostToolUse hook)
+- Only processes .md files
 - Runs markdown-fixer silently
 - Only active if markdown-fixer is installed
 
@@ -112,17 +112,19 @@ pip install -e .
 
 ### Hook not running?
 
-Verify it's executable:
+Check hook configuration:
 ```bash
-chmod +x .claude/hooks/user-prompt-submit.sh
+cat .claude/settings.local.json | grep -A 20 hooks
+```
+
+Verify the script exists:
+```bash
+ls -la .claude/hooks/post-markdown-fix.py
 ```
 
 ### Want more control?
 
-Disable auto-fix and use slash commands or skill instead:
-```bash
-mv .claude/hooks/user-prompt-submit.sh .claude/hooks/user-prompt-submit.sh.disabled
-```
+Disable auto-fix by removing the hooks section from `.claude/settings.local.json`.
 
 ## Documentation
 

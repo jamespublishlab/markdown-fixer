@@ -4,111 +4,123 @@ This directory contains hooks that integrate markdown-fixer with Claude Code's w
 
 ## Available Hooks
 
-### `user-prompt-submit.sh`
+### `post-markdown-fix.py` (Active)
 
-- **Trigger:** After each user prompt submission
-- **Purpose:** Automatically fix markdown formatting after edits
+- **Trigger:** After Claude uses Write or Edit tools
+- **Purpose:** Automatically fix markdown formatting on .md files
 
 **What it does:**
 
-1. Detects if markdown-fixer is installed (silently skips if not)
-2. Finds markdown files that were recently modified
-3. Runs markdown-fixer on them automatically
+1. Receives JSON input about the tool that was just used
+2. Checks if the file is a markdown file (.md)
+3. Runs markdown-fixer on it automatically
 4. Operates silently (no output unless errors)
 
 **When it runs:**
 
-- After you edit a markdown file and submit a prompt
-- Only on .md files that have been modified
+- Only after Write or Edit tools complete
+- Only on .md files
 - Only if markdown-fixer is installed
+
+### `user-prompt-submit.sh.disabled` (Legacy)
+
+The old hook that ran after every user prompt. Disabled in favor of the more targeted PostToolUse approach.
 
 ## Configuration
 
+The hook is configured in `.claude/settings.local.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-markdown-fix.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
 ### Enable/Disable Auto-Fix
 
-**To enable (default):**
-```bash
-# The hook is already enabled by being in this directory
-# Just ensure markdown-fixer is installed:
-pip install -e .
-```
-
 **To disable temporarily:**
-```bash
-# Rename the hook to disable it
-mv .claude/hooks/user-prompt-submit.sh .claude/hooks/user-prompt-submit.sh.disabled
-```
+
+Remove or comment out the hooks section in `.claude/settings.local.json`.
 
 **To re-enable:**
-```bash
-# Rename it back
-mv .claude/hooks/user-prompt-submit.sh.disabled .claude/hooks/user-prompt-submit.sh
-```
 
-**To disable permanently:**
-```bash
-# Delete the hook
-rm .claude/hooks/user-prompt-submit.sh
-```
+Add the hooks configuration back to `.claude/settings.local.json`.
 
 ### Customize Behavior
 
-Edit `user-prompt-submit.sh` to customize:
+Edit `post-markdown-fix.py` to customize:
 
-**Change verbosity:**
-```bash
-# Current (silent):
-markdown-fixer "$file" --in-place --quiet 2>/dev/null
-
-# Show output:
-markdown-fixer "$file" --in-place --verbose
+**Add verbose output:**
+```python
+if result.returncode == 0:
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PostToolUse",
+            "additionalContext": f"Auto-fixed markdown formatting in {file_path}"
+        }
+    }))
 ```
 
-**Change file detection:**
-```bash
-# Current: Files modified in last 2 minutes
-find . -maxdepth 2 -name "*.md" -mmin -2 -type f
-
-# All markdown files:
-find . -name "*.md" -type f
-
-# Specific directories only:
-find ./docs -name "*.md" -type f
+**Exclude certain files:**
+```python
+# Skip CHANGELOG
+if file_path.endswith("CHANGELOG.md"):
+    sys.exit(0)
 ```
 
-**Add exclusions:**
-```bash
-# Skip certain files or directories
-modified_files=$(git diff --name-only --diff-filter=M | grep '\.md$' | grep -v 'CHANGELOG.md')
+**Add more file types:**
+```python
+# Also fix .markdown files
+if not (file_path.endswith(".md") or file_path.endswith(".markdown")):
+    sys.exit(0)
 ```
 
 ## How It Works
 
 ### Hook Lifecycle
 
-1. **User submits prompt** → Claude Code responds
-2. **Hook triggers** → After prompt processing
-3. **Hook checks** → Are there modified markdown files?
+1. **Claude writes/edits a file** → Tool completes
+2. **Hook receives JSON** → Contains tool_name and file_path
+3. **Hook checks file type** → Is it a .md file?
 4. **Hook acts** → Runs markdown-fixer if needed
-5. **Hook exits** → Silently (no interruption)
+5. **Hook exits** → Code 0 (success)
 
-### Git Integration
+### Input Format
 
-If you're in a git repository:
+The hook receives JSON via stdin:
 
-- Only fixes files tracked by git
-- Only fixes files with uncommitted changes
-- Uses `git diff` to detect modifications
-
-If not in a git repo:
-
-- Fixes any .md files modified in the last 2 minutes
-- Limited to current and one level of subdirectories
+```json
+{
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/path/to/file.md",
+    "content": "..."
+  },
+  "tool_response": {
+    "success": true
+  }
+}
+```
 
 ### Safety Features
 
+- **Targeted execution**: Only runs on Write/Edit, not every prompt
+- **File type filtering**: Only processes .md files
 - **Graceful degradation**: Skips if markdown-fixer not installed
-- **Error suppression**: Doesn't fail if files are missing
+- **Error suppression**: Doesn't fail if something goes wrong
 - **Silent operation**: No spam in the output
 - **Non-blocking**: Doesn't interfere with Claude Code
 
@@ -116,15 +128,14 @@ If not in a git repo:
 
 ### Hook Not Running
 
-**Check if hooks are enabled:**
+**Check if hooks are configured:**
 ```bash
-# Verify the hook file exists and is executable
-ls -la .claude/hooks/user-prompt-submit.sh
+cat .claude/settings.local.json | grep -A 20 hooks
 ```
 
-**Ensure it's executable:**
+**Verify the script exists and is executable:**
 ```bash
-chmod +x .claude/hooks/user-prompt-submit.sh
+ls -la .claude/hooks/post-markdown-fix.py
 ```
 
 **Check if markdown-fixer is installed:**
@@ -132,75 +143,31 @@ chmod +x .claude/hooks/user-prompt-submit.sh
 which markdown-fixer
 ```
 
-### Hook Running Too Often
+### Testing the Hook Manually
 
-If the hook is fixing files you don't want fixed:
-
-**Option 1: Add exclusions**
-Edit the hook to skip certain files:
 ```bash
-if [[ "$file" == *"CHANGELOG.md"* ]]; then
-    continue
-fi
-```
-
-**Option 2: Disable the hook**
-```bash
-mv .claude/hooks/user-prompt-submit.sh .claude/hooks/user-prompt-submit.sh.disabled
+echo '{"tool_name": "Write", "tool_input": {"file_path": "test.md"}}' | python3 .claude/hooks/post-markdown-fix.py
 ```
 
 ### Want to See What It's Doing
 
-Enable verbose mode in the hook:
-```bash
-# Replace this line:
-markdown-fixer "$file" --in-place --quiet 2>/dev/null
-
-# With this:
-echo "Auto-fixing: $file"
-markdown-fixer "$file" --in-place --verbose
+Add debug output to the script:
+```python
+import sys
+print(f"Processing: {file_path}", file=sys.stderr)
 ```
 
-## Advanced Usage
+## Comparison: PostToolUse vs UserPromptSubmit
 
-### Conditional Auto-Fix
-
-Only fix certain files:
-```bash
-# Only fix README and docs
-if [[ "$file" == "README.md" ]] || [[ "$file" == docs/* ]]; then
-    markdown-fixer "$file" --in-place --quiet
-fi
-```
-
-### Pre-Commit Hook
-
-Create a git pre-commit hook instead:
-```bash
-# .git/hooks/pre-commit
-#!/bin/bash
-git diff --cached --name-only --diff-filter=ACM | grep '\.md$' | xargs -I {} markdown-fixer {} -i
-```
-
-### Notification on Fix
-
-Show a notification when files are fixed:
-```bash
-if markdown-fixer "$file" --in-place; then
-    echo "✓ Fixed: $file"
-fi
-```
-
-## Best Practices
-
-1. **Commit before bulk operations**: Auto-fix is safe, but commits give you rollback
-2. **Test the hook**: Edit a markdown file and verify it works
-3. **Monitor initially**: Enable verbose mode to see what's happening
-4. **Disable when needed**: For large refactors, disable temporarily
-5. **Keep markdown-fixer updated**: `pip install --upgrade markdown-fixer`
+| Aspect | PostToolUse (Current) | UserPromptSubmit (Legacy) |
+|--------|----------------------|---------------------------|
+| **Trigger** | After Write/Edit tools | After every user prompt |
+| **Precision** | Only on file operations | Scans for modified files |
+| **Performance** | Faster (targeted) | Slower (git diff on every prompt) |
+| **Reliability** | Gets exact file path | May miss files |
 
 ## See Also
 
-- [Skill Documentation](../../skill/README.md) - For manual markdown fixing
+- [Claude Code README](../README.md) - Overview of all integrations
 - [Main README](../../README.md) - Project overview
-- Claude Code Hooks Documentation - Official Claude Code docs
+- [Claude Code Hooks Documentation](https://docs.anthropic.com/en/docs/claude-code/hooks)
