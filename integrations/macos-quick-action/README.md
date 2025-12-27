@@ -56,7 +56,7 @@ If you need to create the workflow from scratch:
 
 The Quick Action cannot find the `markdown-fixer` command. Fix:
 
-1. Ensure it's installed: `pipx install markdown-fixer`
+1. Ensure it's installed: `pipx install git+https://github.com/jamespublishlab/markdown-fixer.git`
 2. Check installation: `which markdown-fixer`
 3. If using pip instead of pipx, make sure `~/.local/bin` is in PATH
 

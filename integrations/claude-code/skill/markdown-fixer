@@ -22,11 +22,11 @@ If not installed, install it:
 # If in the markdown-fixer project directory
 pip install -e .
 
-# If installing from PyPI
-pipx install markdown-fixer
+# Install from GitHub
+pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
 
 # Or with pip
-pip install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 # Commands

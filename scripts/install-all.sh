@@ -71,7 +71,7 @@ echo
 # Check OS
 if [[ "$OSTYPE" != "darwin"* ]]; then
     echo -e "${RED}✗ This installer is for macOS only${NC}"
-    echo "For other platforms, use: pip install markdown-fixer"
+    echo "For other platforms, use: pip install git+https://github.com/jamespublishlab/markdown-fixer.git"
     exit 1
 fi
 

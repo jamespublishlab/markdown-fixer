@@ -12,7 +12,7 @@ The `markdown-fixer` command isn't in your PATH.
 
 ```bash
 pip install pipx
-pipx install markdown-fixer
+pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 **Solution 2:** Add to PATH
@@ -34,7 +34,7 @@ python -m markdown_fixer.cli file.md -i
 The package isn't installed in your Python environment.
 
 ```bash
-pip install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 # or if installing from source:
 pip install -e .
 ```

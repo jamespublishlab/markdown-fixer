@@ -16,9 +16,9 @@ This skill enables Claude Code to:
 ### 1. Install markdown-fixer
 
 ```bash
-pipx install markdown-fixer
+pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
 # or
-pip install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 ### 2. Install the Skill Globally

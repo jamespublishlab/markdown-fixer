@@ -86,7 +86,7 @@ elif command -v markdown-fixer &amp;&gt; /dev/null; then
     MARKDOWN_FIXER="markdown-fixer"
 else
     # Show error notification
-    osascript -e 'display notification "Please install: pipx install markdown-fixer" with title "Markdown Fixer Not Found" sound name "Basso"' 2&gt;/dev/null || true
+    osascript -e 'display notification "Install from github.com/jamespublishlab/markdown-fixer" with title "Markdown Fixer Not Found" sound name "Basso"' 2&gt;/dev/null || true
     exit 1
 fi
 

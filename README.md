@@ -1,6 +1,5 @@
 # Markdown Fixer
 
-[![PyPI version](https://badge.fury.io/py/markdown-fixer.svg)](https://pypi.org/project/markdown-fixer/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/jamespublishlab/markdown-fixer/workflows/Tests/badge.svg)](https://github.com/jamespublishlab/markdown-fixer/actions)
 
@@ -9,7 +8,7 @@ Fix common markdown formatting issues in LLM-generated content with one command.
 ## Quick Start
 
 ```bash
-pip install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 markdown-fixer file.md --in-place
 ```
 

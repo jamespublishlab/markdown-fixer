@@ -7,7 +7,7 @@ Get up and running with markdown-fixer in under 5 minutes.
 **Quick install:**
 
 ```bash
-pip install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 **Other options:** See [Installation Guide](installation.md) for pipx, from source, and more.

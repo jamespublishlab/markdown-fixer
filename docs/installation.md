@@ -4,16 +4,16 @@ Choose the installation method that works best for your workflow.
 
 ## Quick Install
 
-### pipx (Recommended)
+### pip (from GitHub)
 
 ```bash
-pipx install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
-### pip
+### pipx (Recommended for CLI use)
 
 ```bash
-pip install markdown-fixer
+pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 ## Platform-Specific Installation
@@ -55,7 +55,7 @@ markdown-fixer --version
 
 ```bash
 pip install pipx
-pipx install markdown-fixer
+pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 **Option 2:** Add to PATH
@@ -84,7 +84,7 @@ chmod +x scripts/install-all.sh
 The CLI works on Windows:
 
 ```bash
-pip install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 markdown-fixer file.md -i
 ```
 

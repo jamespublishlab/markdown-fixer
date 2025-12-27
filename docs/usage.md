@@ -150,7 +150,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install markdown-fixer
+      - run: pip install git+https://github.com/jamespublishlab/markdown-fixer.git
       - run: markdown-fixer docs/**/*.md --dry-run
 ```
 
