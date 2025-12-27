@@ -2,7 +2,7 @@
 """Tests for MCP server."""
 
 import json
-import pytest
+
 from markdown_fixer.mcp_server import MarkdownFixerMCPServer
 
 
