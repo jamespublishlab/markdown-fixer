@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "markdown-fixer"
+version = "1.0.0"
+description = "Fix common markdown formatting issues in LLM-generated content"
+authors = [{name = "James", email = "james@publishlab.com"}]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+keywords = ["markdown", "formatting", "linter", "llm", "documentation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+
+dependencies = [
+    "click>=8.0",
+    "wcwidth>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+markdown-fixer = "markdown_fixer.cli:main"
+mdfixer = "markdown_fixer.cli:main"  # Short alias
+
+[project.urls]
+Homepage = "https://github.com/jamespublishlab/markdown-fixer"
+Repository = "https://github.com/jamespublishlab/markdown-fixer"
+Issues = "https://github.com/jamespublishlab/markdown-fixer/issues"
+Changelog = "https://github.com/jamespublishlab/markdown-fixer/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+# Coverage options (requires pytest-cov: pip install pytest-cov)
+# addopts = "--cov=markdown_fixer --cov-report=html --cov-report=term-missing"
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
