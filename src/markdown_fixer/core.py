@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional, List, Tuple
 
 try:
-    import wcwidth
+    import wcwidth  # type: ignore[import-untyped]
 
     HAS_WCWIDTH = True
 except ImportError:
@@ -76,11 +76,11 @@ class MarkdownFixer:
             Formatted markdown content
         """
         lines = content.split("\n")
-        result = []
+        result: List[str] = []
         in_code_block = False
         just_exited_block = False  # Track if we just exited a block element
         in_list = False
-        field_metadata_buffer = []
+        field_metadata_buffer: List[str] = []
         i = 0
 
         def ensure_blank_before():
