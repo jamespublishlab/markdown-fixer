@@ -6,14 +6,8 @@ This document describes the organization of the markdown-fixer project.
 
 ```
 markdown-fixer/
-├── .claude/                          # Claude Code integration
-│   ├── commands/                     # Slash commands
-│   │   ├── fix-markdown.md          # Fix specific files
-│   │   └── fix-all-markdown.md      # Fix all project markdown
-│   ├── hooks/                        # Auto-fix hooks
-│   │   ├── post-markdown-fix.py     # Auto-fix on Write/Edit
-│   │   └── README.md                # Hook documentation
-│   └── README.md                     # Claude integration overview
+├── .claude/                          # Claude Code local settings
+│   └── settings.local.json          # Project-specific permissions
 │
 ├── .github/workflows/                # CI/CD pipelines
 │   ├── test.yml                      # Test workflow (pytest, coverage)
@@ -30,6 +24,12 @@ markdown-fixer/
 │   └── claude-desktop-setup.md      # Non-technical setup guide
 │
 ├── integrations/                     # Platform-specific integrations
+│   ├── claude-code/                  # Claude Code integration
+│   │   ├── commands/                 # Slash commands
+│   │   ├── hooks/                    # Auto-fix hooks
+│   │   ├── skill/                    # AI skill
+│   │   └── README.md                # Claude Code setup guide
+│   │
 │   ├── jetbrains-plugin/             # Native JetBrains IDE plugin
 │   │   ├── src/                      # Kotlin source code
 │   │   ├── build.gradle.kts         # Gradle build
@@ -56,10 +56,6 @@ markdown-fixer/
 │   ├── build-release.sh              # Build all release artifacts
 │   ├── install-all.sh                # Universal installer (macOS)
 │   └── install-quick-action.sh       # Quick Action installer
-│
-├── skill/                            # Claude Code skill
-│   ├── markdown-fixer                # Skill definition (no extension)
-│   └── README.md                     # Skill documentation
 │
 ├── src/markdown_fixer/               # Core Python package
 │   ├── __init__.py                   # Package exports
@@ -235,14 +231,13 @@ mypy src/                       # Type check
 
 ### Integration Docs
 
-Each integration has its own README:
+Each integration has its own README in `integrations/`:
 
-- `.claude/README.md` - Claude Code
+- `integrations/claude-code/README.md` - Claude Code (commands, hooks, skill)
 - `integrations/jetbrains-plugin/README.md` - JetBrains
 - `integrations/macos-app/README.md` - macOS App
 - `integrations/macos-quick-action/README.md` - Quick Action
 - `integrations/mcp-server/README.md` - MCP Server
-- `skill/README.md` - Claude Code skill
 
 ## Contributing
 

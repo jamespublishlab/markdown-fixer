@@ -106,7 +106,7 @@ Never modifies: code blocks, inline code, blockquotes, headers.
 | macOS Quick Action | [integrations/macos-quick-action](integrations/macos-quick-action/README.md) |
 | macOS App | [integrations/macos-app](integrations/macos-app/README.md) |
 | JetBrains IDEs | [integrations/jetbrains-plugin](integrations/jetbrains-plugin/README.md) |
-| Claude Code | [.claude/README.md](.claude/README.md) |
+| Claude Code | [integrations/claude-code](integrations/claude-code/README.md) |
 | Claude Desktop | [integrations/mcp-server](integrations/mcp-server/README.md) |
 
 ## Contributing

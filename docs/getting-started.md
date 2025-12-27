@@ -59,7 +59,7 @@ Now that it works, pick the integration that fits how you work:
 | Right-click files in Finder (macOS) | [Quick Action](../integrations/macos-quick-action/README.md) |
 | Drag-and-drop files (macOS) | [Mac App](../integrations/macos-app/README.md) |
 | Fix in my IDE (JetBrains) | [JetBrains Plugin](../integrations/jetbrains-plugin/README.md) |
-| Use with Claude Code | [Claude Code](../.claude/README.md) |
+| Use with Claude Code | [Claude Code](../integrations/claude-code/README.md) |
 | Use with Claude Desktop | [MCP Server](../integrations/mcp-server/README.md) |
 
 See [Integrations](integrations.md) for a full comparison.

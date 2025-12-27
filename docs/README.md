@@ -29,7 +29,7 @@ Complete guide to markdown-fixer documentation.
 | macOS Quick Action | [integrations/macos-quick-action](../integrations/macos-quick-action/README.md) |
 | macOS App | [integrations/macos-app](../integrations/macos-app/README.md) |
 | JetBrains IDEs | [integrations/jetbrains-plugin](../integrations/jetbrains-plugin/README.md) |
-| Claude Code | [.claude/README.md](../.claude/README.md) |
+| Claude Code | [integrations/claude-code](../integrations/claude-code/README.md) |
 | Claude Desktop | [integrations/mcp-server](../integrations/mcp-server/README.md) |
 | Non-technical users | [Claude Desktop Setup](claude-desktop-setup.md) |
 
@@ -57,7 +57,7 @@ Complete guide to markdown-fixer documentation.
 **AI Users:**
 
 - Claude Desktop: [MCP Server](../integrations/mcp-server/README.md) or [Simple Setup](claude-desktop-setup.md)
-- Claude Code: [Claude Code Guide](../.claude/README.md)
+- Claude Code: [Claude Code Guide](../integrations/claude-code/README.md)
 
 ### By Task
 

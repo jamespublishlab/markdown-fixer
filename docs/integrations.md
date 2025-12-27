@@ -89,7 +89,7 @@ Ask naturally:
 
 Automatically fixes markdown files after Claude writes or edits them.
 
-**Setup:** [Claude Code Guide](../.claude/README.md)
+**Setup:** [Claude Code Guide](../integrations/claude-code/README.md)
 
 ## Claude Desktop (MCP)
 
