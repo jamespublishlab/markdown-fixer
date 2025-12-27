@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Tests for MCP server."""
 
-import json
-
 from markdown_fixer.mcp_server import MarkdownFixerMCPServer
 
 
