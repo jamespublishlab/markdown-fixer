@@ -9,6 +9,7 @@ from typing import Optional, List, Tuple
 
 try:
     import wcwidth
+
     HAS_WCWIDTH = True
 except ImportError:
     HAS_WCWIDTH = False
@@ -26,7 +27,9 @@ class MarkdownFixer:
         """
         self.config = config or {}
 
-    def fix_file(self, filepath: str, in_place: bool = True, output_path: Optional[str] = None) -> str:
+    def fix_file(
+        self, filepath: str, in_place: bool = True, output_path: Optional[str] = None
+    ) -> str:
         """
         Fix a markdown file.
 
@@ -42,24 +45,24 @@ class MarkdownFixer:
         if not input_path.exists():
             raise FileNotFoundError(f"File not found: {input_path}")
 
-        if not input_path.suffix == '.md':
+        if not input_path.suffix == ".md":
             # Warning but continue
             pass
 
-        content = input_path.read_text(encoding='utf-8')
+        content = input_path.read_text(encoding="utf-8")
         formatted = self.fix_string(content)
 
         if in_place:
-            input_path.write_text(formatted, encoding='utf-8')
+            input_path.write_text(formatted, encoding="utf-8")
             return str(input_path)
         elif output_path:
             output = Path(output_path)
-            output.write_text(formatted, encoding='utf-8')
+            output.write_text(formatted, encoding="utf-8")
             return str(output)
         else:
             # Create .formatted.md
-            output = input_path.with_suffix('.formatted.md')
-            output.write_text(formatted, encoding='utf-8')
+            output = input_path.with_suffix(".formatted.md")
+            output.write_text(formatted, encoding="utf-8")
             return str(output)
 
     def fix_string(self, content: str) -> str:
@@ -72,7 +75,7 @@ class MarkdownFixer:
         Returns:
             Formatted markdown content
         """
-        lines = content.split('\n')
+        lines = content.split("\n")
         result = []
         in_code_block = False
         just_exited_block = False  # Track if we just exited a block element
@@ -83,7 +86,7 @@ class MarkdownFixer:
         def ensure_blank_before():
             """Add blank line before current element if needed."""
             if result and result[-1].strip():
-                result.append('')
+                result.append("")
 
         while i < len(lines):
             line = lines[i]
@@ -93,7 +96,7 @@ class MarkdownFixer:
                 # Add a blank line if we're not already at a blank line
                 # This maintains document structure when rules are removed
                 if result and result[-1].strip():
-                    result.append('')
+                    result.append("")
                 i += 1
                 continue
 
@@ -130,7 +133,7 @@ class MarkdownFixer:
             if just_exited_block:
                 just_exited_block = False
                 if line.strip():  # Non-blank line after block
-                    result.append('')
+                    result.append("")
 
             # Check if this is a heading
             if self._is_heading(line):
@@ -152,7 +155,11 @@ class MarkdownFixer:
                 continue
 
             # Check if this is the start of a table
-            if self._is_table_row(line) and i + 1 < len(lines) and self._is_delimiter_row(lines[i + 1]):
+            if (
+                self._is_table_row(line)
+                and i + 1 < len(lines)
+                and self._is_delimiter_row(lines[i + 1])
+            ):
                 # Flush any pending field metadata before table
                 if field_metadata_buffer:
                     self._flush_field_metadata(result, field_metadata_buffer, lines, i)
@@ -179,18 +186,18 @@ class MarkdownFixer:
                 # Extract the field and value - try all patterns
                 stripped = line.strip()
                 # Try **Key:** value (colon inside bold)
-                match = re.match(r'^\*\*([^*]+):\*\*\s+(.+)$', stripped)
+                match = re.match(r"^\*\*([^*]+):\*\*\s+(.+)$", stripped)
                 if not match:
                     # Try **Key**: value (colon outside bold)
-                    match = re.match(r'^\*\*([^*:]+)\*\*:\s+(.+)$', stripped)
+                    match = re.match(r"^\*\*([^*:]+)\*\*:\s+(.+)$", stripped)
                 if not match:
                     # Try **Key**text: value (edge case with text between bold and colon)
-                    match = re.match(r'^\*\*([^*]+)\*\*[^:]*:\s+(.+)$', stripped)
+                    match = re.match(r"^\*\*([^*]+)\*\*[^:]*:\s+(.+)$", stripped)
 
                 if match:
                     field, value = match.groups()
                     # Normalize to **Key:** value format (colon inside bold)
-                    field_metadata_buffer.append(f'**{field}:** {value}')
+                    field_metadata_buffer.append(f"**{field}:** {value}")
                     i += 1
                     continue
 
@@ -216,7 +223,7 @@ class MarkdownFixer:
                 # Ending a list - ensure blank line after
                 in_list = False
                 if line.strip():  # Only add blank if next line isn't already blank
-                    result.append('')
+                    result.append("")
                 result.append(line)
 
             else:
@@ -230,10 +237,10 @@ class MarkdownFixer:
             self._flush_field_metadata(result, field_metadata_buffer, [], len(lines))
 
         # Join lines and collapse excessive newlines
-        formatted = '\n'.join(result)
+        formatted = "\n".join(result)
 
         # Collapse 3+ consecutive newlines to exactly 2 (one blank line)
-        formatted = re.sub(r'\n{3,}', '\n\n', formatted)
+        formatted = re.sub(r"\n{3,}", "\n\n", formatted)
 
         return formatted
 
@@ -243,15 +250,15 @@ class MarkdownFixer:
         if len(buffer) >= 2:
             # Add blank line before if needed
             if result and result[-1].strip():
-                result.append('')
+                result.append("")
 
             # Add as bulleted list
-            result.extend([f'- {item}' for item in buffer])
+            result.extend([f"- {item}" for item in buffer])
 
             # Add blank line after
-            next_line = lines[next_line_idx] if next_line_idx < len(lines) else ''
+            next_line = lines[next_line_idx] if next_line_idx < len(lines) else ""
             if next_line.strip():  # Only if next line isn't already blank
-                result.append('')
+                result.append("")
         else:
             # Single field metadata line - keep as-is (no bullet)
             result.append(buffer[0])
@@ -261,10 +268,10 @@ class MarkdownFixer:
         """Check if a line is a list item (ordered or unordered)."""
         stripped = line.lstrip()
         # Unordered lists: -, *, +
-        if stripped.startswith(('- ', '* ', '+ ')):
+        if stripped.startswith(("- ", "* ", "+ ")):
             return True
         # Ordered lists: 1., 2., etc.
-        if re.match(r'^\d+\.\s', stripped):
+        if re.match(r"^\d+\.\s", stripped):
             return True
         return False
 
@@ -276,22 +283,24 @@ class MarkdownFixer:
         # 1. **Key:** value (colon inside bold)
         # 2. **Key**: value (colon outside bold)
         # 3. **Key**text: value (text between bold and colon - edge case)
-        return bool(re.match(r'^\*\*[^*]+:\*\*\s+.+$', stripped) or
-                   re.match(r'^\*\*[^*:]+\*\*:\s+.+$', stripped) or
-                   re.match(r'^\*\*[^*]+\*\*[^:]*:\s+.+$', stripped))
+        return bool(
+            re.match(r"^\*\*[^*]+:\*\*\s+.+$", stripped)
+            or re.match(r"^\*\*[^*:]+\*\*:\s+.+$", stripped)
+            or re.match(r"^\*\*[^*]+\*\*[^:]*:\s+.+$", stripped)
+        )
 
     @staticmethod
     def _is_code_fence(line: str) -> bool:
         """Check if line is a code fence (```...)."""
         stripped = line.strip()
-        return stripped.startswith('```') or stripped.startswith('~~~')
+        return stripped.startswith("```") or stripped.startswith("~~~")
 
     @staticmethod
     def _is_heading(line: str) -> bool:
         """Check if line is a markdown heading (# Header)."""
         stripped = line.strip()
         # Match # followed by space, or ## followed by space, etc.
-        return bool(re.match(r'^#{1,6}\s+\S', stripped))
+        return bool(re.match(r"^#{1,6}\s+\S", stripped))
 
     @staticmethod
     def _is_horizontal_rule(line: str) -> bool:
@@ -302,12 +311,14 @@ class MarkdownFixer:
         if len(stripped) < 3:
             return False
         # Remove spaces and check if all remaining chars are the same rule char
-        no_spaces = stripped.replace(' ', '')
+        no_spaces = stripped.replace(" ", "")
         if len(no_spaces) < 3:
             return False
-        return (all(c == '-' for c in no_spaces) or
-                all(c == '*' for c in no_spaces) or
-                all(c == '_' for c in no_spaces))
+        return (
+            all(c == "-" for c in no_spaces)
+            or all(c == "*" for c in no_spaces)
+            or all(c == "_" for c in no_spaces)
+        )
 
     # ========== Table Formatting Methods ==========
 
@@ -317,7 +328,7 @@ class MarkdownFixer:
         stripped = line.strip()
         # Must have at least one pipe (even without leading/trailing pipes)
         # Avoid matching other pipe-like content
-        return '|' in stripped and not stripped.startswith('>')
+        return "|" in stripped and not stripped.startswith(">")
 
     @staticmethod
     def _is_delimiter_row(line: str) -> bool:
@@ -325,7 +336,7 @@ class MarkdownFixer:
         stripped = line.strip()
         # Must contain pipes and dashes, and optionally colons for alignment
         # Pattern: |---|--:|:--:|
-        return bool(re.match(r'^\|?[\s:]*-+[\s:]*(\|[\s:]*-+[\s:]*)+\|?\s*$', stripped))
+        return bool(re.match(r"^\|?[\s:]*-+[\s:]*(\|[\s:]*-+[\s:]*)+\|?\s*$", stripped))
 
     def _extract_table(self, lines: List[str], start_idx: int) -> Tuple[List[str], int]:
         """
@@ -352,7 +363,7 @@ class MarkdownFixer:
         Returns list of cell contents with whitespace stripped.
         """
         # Split on pipes that aren't preceded by backslash
-        cells = re.split(r'(?<!\\)\|', line)
+        cells = re.split(r"(?<!\\)\|", line)
 
         # Strip whitespace from each cell
         cells = [cell.strip() for cell in cells]
@@ -374,12 +385,12 @@ class MarkdownFixer:
         alignments = []
         for cell in delimiter_row:
             cell = cell.strip()
-            if cell.startswith(':') and cell.endswith(':'):
-                alignments.append('center')
-            elif cell.endswith(':'):
-                alignments.append('right')
+            if cell.startswith(":") and cell.endswith(":"):
+                alignments.append("center")
+            elif cell.endswith(":"):
+                alignments.append("right")
             else:
-                alignments.append('left')
+                alignments.append("left")
         return alignments
 
     def _display_width(self, text: str) -> int:
@@ -413,7 +424,7 @@ class MarkdownFixer:
         for i, row in enumerate(rows):
             # Ensure row has enough cells (pad with empty if needed)
             while len(row) < num_cols:
-                row.append('')
+                row.append("")
 
             # Skip delimiter row for content width calculation
             if i == delimiter_idx:
@@ -439,24 +450,24 @@ class MarkdownFixer:
                 break
 
             width = widths[i]
-            align = alignments[i] if i < len(alignments) else 'left'
+            align = alignments[i] if i < len(alignments) else "left"
 
             # Calculate padding needed
             cell_width = self._display_width(cell)
             padding_needed = width - cell_width
 
-            if align == 'left':
-                formatted = cell + ' ' * padding_needed
-            elif align == 'right':
-                formatted = ' ' * padding_needed + cell
+            if align == "left":
+                formatted = cell + " " * padding_needed
+            elif align == "right":
+                formatted = " " * padding_needed + cell
             else:  # center
                 left_pad = padding_needed // 2
                 right_pad = padding_needed - left_pad
-                formatted = ' ' * left_pad + cell + ' ' * right_pad
+                formatted = " " * left_pad + cell + " " * right_pad
 
             formatted_cells.append(formatted)
 
-        return '| ' + ' | '.join(formatted_cells) + ' |'
+        return "| " + " | ".join(formatted_cells) + " |"
 
     def _format_delimiter_row(self, widths: List[int], alignments: List[str]) -> str:
         """
@@ -465,18 +476,18 @@ class MarkdownFixer:
         delimiters = []
 
         for i, width in enumerate(widths):
-            align = alignments[i] if i < len(alignments) else 'left'
+            align = alignments[i] if i < len(alignments) else "left"
 
-            if align == 'left':
-                delim = ':' + '-' * (width + 1)  # Add extra dash to account for space
-            elif align == 'right':
-                delim = '-' * (width + 1) + ':'  # Add extra dash to account for space
+            if align == "left":
+                delim = ":" + "-" * (width + 1)  # Add extra dash to account for space
+            elif align == "right":
+                delim = "-" * (width + 1) + ":"  # Add extra dash to account for space
             else:  # center
-                delim = ':' + '-' * width + ':'
+                delim = ":" + "-" * width + ":"
 
             delimiters.append(delim)
 
-        return '|' + '|'.join(delimiters) + '|'
+        return "|" + "|".join(delimiters) + "|"
 
     def _format_table(self, table_lines: List[str]) -> List[str]:
         """
@@ -499,7 +510,7 @@ class MarkdownFixer:
         num_cols = len(rows[0]) if rows else 0
         for row in rows:
             while len(row) < num_cols:
-                row.append('')
+                row.append("")
             # Truncate extra cells
             if len(row) > num_cols:
                 row[:] = row[:num_cols]

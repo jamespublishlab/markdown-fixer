@@ -355,7 +355,7 @@ Text"""
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         # Should have blank line after list and before text
-        assert result.count('\n\n') >= 2
+        assert result.count("\n\n") >= 2
 
 
 class TestBlockquoteHandling:
@@ -531,9 +531,9 @@ class TestTableFormatting:
         result = fixer.fix_string(input_md)
 
         # Should have three pipes per row
-        lines = result.split('\n')
+        lines = result.split("\n")
         for line in lines:
-            assert line.count('|') == 4  # 4 pipes = 3 columns
+            assert line.count("|") == 4  # 4 pipes = 3 columns
 
     def test_malformed_table_extra_cells(self):
         input_md = """| A|B|C|
@@ -545,9 +545,9 @@ class TestTableFormatting:
         result = fixer.fix_string(input_md)
 
         # Should have three columns only
-        lines = result.split('\n')
+        lines = result.split("\n")
         for line in lines:
-            assert line.count('|') == 4  # 4 pipes = 3 columns
+            assert line.count("|") == 4  # 4 pipes = 3 columns
 
     def test_table_in_code_block_untouched(self):
         input_md = """Here's a table in code:
@@ -613,8 +613,8 @@ Just some text with | a pipe | character."""
         result = fixer.fix_string(input_md)
 
         # Should format with proper alignment
-        lines = result.split('\n')
-        table_lines = [line for line in lines if '|' in line]
+        lines = result.split("\n")
+        table_lines = [line for line in lines if "|" in line]
 
         # Check header row formatted (index 0)
         assert "Endpoint" in table_lines[0]
@@ -676,7 +676,7 @@ class TestFileOperations:
         result_path = fixer.fix_file(str(test_file), in_place=False)
 
         # Should create .formatted.md file
-        assert result_path.endswith('.formatted.md')
+        assert result_path.endswith(".formatted.md")
         assert (tmp_path / "test.formatted.md").exists()
 
     def test_fix_file_custom_output(self, tmp_path):
@@ -687,11 +687,7 @@ class TestFileOperations:
         output_file = tmp_path / "output.md"
 
         fixer = MarkdownFixer()
-        result_path = fixer.fix_file(
-            str(test_file),
-            in_place=False,
-            output_path=str(output_file)
-        )
+        result_path = fixer.fix_file(str(test_file), in_place=False, output_path=str(output_file))
 
         assert result_path == str(output_file)
         assert output_file.exists()

@@ -76,11 +76,7 @@ class TestToolDefinitions:
         tools = response["result"]["tools"]
 
         tool_names = {tool["name"] for tool in tools}
-        expected_names = {
-            "fix_markdown",
-            "fix_markdown_file",
-            "preview_markdown_fixes"
-        }
+        expected_names = {"fix_markdown", "fix_markdown_file", "preview_markdown_fixes"}
         assert tool_names == expected_names
 
 
@@ -90,9 +86,7 @@ class TestFixMarkdownTool:
     def test_fix_markdown_with_valid_content(self):
         """Should fix markdown content and return proper response."""
         server = MarkdownFixerMCPServer()
-        arguments = {
-            "content": "**Name:** John\n**Age:** 30"
-        }
+        arguments = {"content": "**Name:** John\n**Age:** 30"}
 
         response = server._fix_markdown(request_id=1, arguments=arguments)
 
@@ -177,10 +171,7 @@ class TestFixMarkdownFileTool:
         test_file.write_text("**Name:** John\n**Age:** 30")
 
         server = MarkdownFixerMCPServer()
-        arguments = {
-            "filepath": str(test_file),
-            "in_place": True
-        }
+        arguments = {"filepath": str(test_file), "in_place": True}
 
         response = server._fix_markdown_file(request_id=1, arguments=arguments)
 
@@ -204,9 +195,7 @@ class TestPreviewMarkdownFixesTool:
     def test_preview_with_valid_content(self):
         """Should preview fixes and return proper response."""
         server = MarkdownFixerMCPServer()
-        arguments = {
-            "content": "**Name:** John\n**Age:** 30"
-        }
+        arguments = {"content": "**Name:** John\n**Age:** 30"}
 
         response = server._preview_fixes(request_id=1, arguments=arguments)
 
@@ -227,9 +216,7 @@ class TestPreviewMarkdownFixesTool:
         """Should indicate when no changes are needed."""
         server = MarkdownFixerMCPServer()
         # Already properly formatted markdown
-        arguments = {
-            "content": "# Test\n\n- Item 1\n- Item 2"
-        }
+        arguments = {"content": "# Test\n\n- Item 1\n- Item 2"}
 
         response = server._preview_fixes(request_id=1, arguments=arguments)
 
@@ -254,12 +241,7 @@ class TestRequestHandling:
     def test_handle_initialize_request(self):
         """Should handle initialize request."""
         server = MarkdownFixerMCPServer()
-        request = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {}
-        }
+        request = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}
 
         response = server.handle_request(request)
 
@@ -272,12 +254,7 @@ class TestRequestHandling:
     def test_handle_tools_list_request(self):
         """Should handle tools/list request."""
         server = MarkdownFixerMCPServer()
-        request = {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/list",
-            "params": {}
-        }
+        request = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
         response = server.handle_request(request)
 
@@ -293,12 +270,7 @@ class TestRequestHandling:
             "jsonrpc": "2.0",
             "id": 3,
             "method": "tools/call",
-            "params": {
-                "name": "fix_markdown",
-                "arguments": {
-                    "content": "**Test:** value"
-                }
-            }
+            "params": {"name": "fix_markdown", "arguments": {"content": "**Test:** value"}},
         }
 
         response = server.handle_request(request)
@@ -310,12 +282,7 @@ class TestRequestHandling:
     def test_handle_unknown_method(self):
         """Should return error for unknown method."""
         server = MarkdownFixerMCPServer()
-        request = {
-            "jsonrpc": "2.0",
-            "id": 4,
-            "method": "unknown_method",
-            "params": {}
-        }
+        request = {"jsonrpc": "2.0", "id": 4, "method": "unknown_method", "params": {}}
 
         response = server.handle_request(request)
 
@@ -327,11 +294,7 @@ class TestRequestHandling:
     def test_handle_notification_without_id(self):
         """Should return None for notifications (no id)."""
         server = MarkdownFixerMCPServer()
-        request = {
-            "jsonrpc": "2.0",
-            "method": "some_notification",
-            "params": {}
-        }
+        request = {"jsonrpc": "2.0", "method": "some_notification", "params": {}}
 
         response = server.handle_request(request)
 
@@ -345,11 +308,7 @@ class TestErrorHandling:
     def test_error_response_format(self):
         """Error responses should have correct format."""
         server = MarkdownFixerMCPServer()
-        error = server._error_response(
-            request_id=1,
-            code=-32602,
-            message="Invalid params"
-        )
+        error = server._error_response(request_id=1, code=-32602, message="Invalid params")
 
         assert error["jsonrpc"] == "2.0"
         assert error["id"] == 1
@@ -365,10 +324,7 @@ class TestErrorHandling:
             "jsonrpc": "2.0",
             "id": 1,
             "method": "tools/call",
-            "params": {
-                "name": "nonexistent_tool",
-                "arguments": {}
-            }
+            "params": {"name": "nonexistent_tool", "arguments": {}},
         }
 
         response = server.handle_request(request)

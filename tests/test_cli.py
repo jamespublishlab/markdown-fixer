@@ -10,15 +10,15 @@ class TestCLI:
 
     def test_version(self):
         runner = CliRunner()
-        result = runner.invoke(main, ['--version'])
+        result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert '1.0.0' in result.output
+        assert "1.0.0" in result.output
 
     def test_help(self):
         runner = CliRunner()
-        result = runner.invoke(main, ['--help'])
+        result = runner.invoke(main, ["--help"])
         assert result.exit_code == 0
-        assert 'Fix markdown formatting issues' in result.output
+        assert "Fix markdown formatting issues" in result.output
 
     def test_fix_file_in_place(self, tmp_path):
         # Create test file
@@ -26,12 +26,12 @@ class TestCLI:
         test_file.write_text("# Header\n- List item\nText")
 
         runner = CliRunner()
-        result = runner.invoke(main, [str(test_file), '--in-place'])
+        result = runner.invoke(main, [str(test_file), "--in-place"])
 
         assert result.exit_code == 0
-        assert 'Formatted' in result.output
+        assert "Formatted" in result.output
         content = test_file.read_text()
-        assert '\n\n- List item\n\n' in content
+        assert "\n\n- List item\n\n" in content
 
     def test_dry_run(self, tmp_path):
         # Create test file
@@ -40,13 +40,13 @@ class TestCLI:
         test_file.write_text(original_content)
 
         runner = CliRunner()
-        result = runner.invoke(main, [str(test_file), '--dry-run'])
+        result = runner.invoke(main, [str(test_file), "--dry-run"])
 
         assert result.exit_code == 0
         # File should not be modified
         assert test_file.read_text() == original_content
         # Output should contain the formatted content
-        assert '- List item' in result.output
+        assert "- List item" in result.output
 
     def test_output_option(self, tmp_path):
         # Create test file
@@ -55,7 +55,7 @@ class TestCLI:
         output_file = tmp_path / "output.md"
 
         runner = CliRunner()
-        result = runner.invoke(main, [str(test_file), '--output', str(output_file)])
+        result = runner.invoke(main, [str(test_file), "--output", str(output_file)])
 
         assert result.exit_code == 0
         assert output_file.exists()
@@ -68,14 +68,10 @@ class TestCLI:
         test_file2.write_text("# Test 2")
 
         runner = CliRunner()
-        result = runner.invoke(main, [
-            str(test_file1),
-            str(test_file2),
-            '--output', 'out.md'
-        ])
+        result = runner.invoke(main, [str(test_file1), str(test_file2), "--output", "out.md"])
 
         assert result.exit_code == 1
-        assert 'can only be used with a single input file' in result.output
+        assert "can only be used with a single input file" in result.output
 
     def test_verbose_mode(self, tmp_path):
         # Create test file
@@ -83,7 +79,7 @@ class TestCLI:
         test_file.write_text("# Header\n- List item")
 
         runner = CliRunner()
-        result = runner.invoke(main, [str(test_file), '--verbose', '--in-place'])
+        result = runner.invoke(main, [str(test_file), "--verbose", "--in-place"])
 
         assert result.exit_code == 0
-        assert 'Processing:' in result.output
+        assert "Processing:" in result.output
