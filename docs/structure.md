@@ -11,7 +11,7 @@ markdown-fixer/
 │   │   ├── fix-markdown.md          # Fix specific files
 │   │   └── fix-all-markdown.md      # Fix all project markdown
 │   ├── hooks/                        # Auto-fix hooks
-│   │   ├── user-prompt-submit.sh    # Auto-fix on save
+│   │   ├── post-markdown-fix.py     # Auto-fix on Write/Edit
 │   │   └── README.md                # Hook documentation
 │   └── README.md                     # Claude integration overview
 │
@@ -19,10 +19,21 @@ markdown-fixer/
 │   ├── test.yml                      # Test workflow (pytest, coverage)
 │   └── release.yml                   # Release workflow (build, publish)
 │
+├── docs/                             # Documentation
+│   ├── README.md                     # Documentation index
+│   ├── getting-started.md           # 5-minute quickstart
+│   ├── installation.md              # Installation methods
+│   ├── usage.md                     # CLI and library usage
+│   ├── integrations.md              # Integration overview
+│   ├── troubleshooting.md           # Common issues
+│   ├── structure.md                 # This file
+│   └── claude-desktop-setup.md      # Non-technical setup guide
+│
 ├── integrations/                     # Platform-specific integrations
-│   ├── jetbrains/                    # JetBrains IDE integration
-│   │   ├── markdown-fixer.xml       # Import configuration
-│   │   └── README.md                # Complete setup guide
+│   ├── jetbrains-plugin/             # Native JetBrains IDE plugin
+│   │   ├── src/                      # Kotlin source code
+│   │   ├── build.gradle.kts         # Gradle build
+│   │   └── README.md                # Plugin documentation
 │   │
 │   ├── macos-app/                    # macOS drag-and-drop app
 │   │   ├── app_wrapper.py           # Python wrapper
@@ -54,21 +65,21 @@ markdown-fixer/
 │   ├── __init__.py                   # Package exports
 │   ├── __version__.py                # Version information
 │   ├── core.py                       # Formatting logic (MarkdownFixer class)
-│   └── cli.py                        # Command-line interface (Click)
+│   ├── cli.py                        # Command-line interface (Click)
+│   └── mcp_server.py                 # MCP server wrapper (delegates to integrations/)
 │
 ├── tests/                            # Test suite
 │   ├── fixtures/                     # Test fixtures
 │   │   ├── input/                    # Input test files
 │   │   └── expected/                 # Expected output files
 │   ├── test_core.py                  # Core functionality tests
-│   └── test_cli.py                   # CLI interface tests
+│   ├── test_cli.py                   # CLI interface tests
+│   └── test_mcp_server.py            # MCP server tests
 │
 ├── .gitignore                        # Git ignore rules
 ├── CHANGELOG.md                      # Version history
-├── IMPLEMENTATION_PLAN.md            # Original detailed implementation plan
 ├── LICENSE                           # MIT License
 ├── README.md                         # Main project documentation
-├── STRUCTURE.md                      # This file
 └── pyproject.toml                    # Python package configuration
 ```
 
@@ -88,12 +99,13 @@ markdown-fixer/
 - **Tests**: Comprehensive coverage for core and CLI
 
 ### Multi-Platform Support
+
 Six usage modes, same logic:
 
 1. **CLI** - Command-line tool (cross-platform)
 2. **Quick Action** - macOS Finder right-click
 3. **Mac App** - macOS drag-and-drop
-4. **IDE Integration** - JetBrains external tool
+4. **IDE Integration** - JetBrains native plugin
 5. **Claude Code** - AI-assisted workflows
 6. **Claude Desktop** - MCP server integration
 
@@ -120,86 +132,72 @@ Six usage modes, same logic:
   - Test configuration (pytest, coverage)
   - Code quality tools (black, ruff, mypy)
 
-## Integration Points
-
-### Python Package
-```bash
-# Install
-pip install -e .  # Development
-pipx install markdown-fixer  # Production
-
-# Use
-from markdown_fixer import MarkdownFixer
-fixer = MarkdownFixer()
-result = fixer.fix_string(content)
-```
-
-### Command Line
-```bash
-# Installed via pip/pipx
-markdown-fixer file.md --in-place
-mdfixer *.md -i  # Short alias
-```
-
-### macOS Quick Action
-```bash
-# Install
-./scripts/install-quick-action.sh
-
-# Use: Right-click .md file in Finder
-```
-
-### JetBrains IDE
-```bash
-# Import markdown-fixer.xml
-# Use: Right-click .md file → External Tools → Fix Markdown
-```
-
-### Claude Code
-```bash
-# Use slash commands
-/fix-markdown README.md
-
-# Or ask naturally
-"Fix the markdown formatting"
-
-# Auto-fix enabled via hooks
-```
-
-### Claude Desktop (MCP)
-```bash
-# Install
-cd integrations/mcp-server
-./install.sh
-
-# Use: Ask Claude in Claude Desktop
-"Fix this markdown: **Name:** John"
-# Claude uses fix_markdown tool automatically
-```
-
 ## Testing Strategy
 
 ### Test Coverage
 
 - **Unit Tests**: `tests/test_core.py` - Core formatting logic
 - **Integration Tests**: `tests/test_cli.py` - CLI interface
+- **MCP Tests**: `tests/test_mcp_server.py` - MCP server
 - **Fixtures**: `tests/fixtures/` - Input/expected output pairs
 - **Target**: 80%+ coverage
 
+### Running Tests
+
+```bash
+pytest                          # Run all tests
+pytest --cov                    # With coverage
+pytest -v                       # Verbose
+pytest tests/test_core.py       # Specific file
+```
+
 ### Test Organization
+
 ```python
 # tests/test_core.py
 TestListFormatting      # Blank lines around lists
 TestFieldMetadata       # Field to bullet conversion
 TestNewlineCollapsing   # Excessive newline removal
 TestCodeBlockHandling   # Code block preservation
+TestTableFormatting     # Table formatting
+TestHeadingFormatting   # Heading spacing
+TestHorizontalRuleRemoval # HR removal
 TestComplexCombinations # Realistic scenarios
 TestFileOperations      # File I/O operations
 ```
 
+## Development Workflow
+
+### Setup
+
+```bash
+git clone https://github.com/jamespublishlab/markdown-fixer.git
+cd markdown-fixer
+pip install -e ".[dev]"
+```
+
+### Code Quality
+
+```bash
+black src/ tests/               # Format code
+ruff check src/ tests/          # Lint
+mypy src/                       # Type check
+```
+
+### Making Changes
+
+1. Create feature branch
+2. Make changes to `src/markdown_fixer/`
+3. Add tests to `tests/`
+4. Run tests: `pytest`
+5. Run linters: `black`, `ruff`, `mypy`
+6. Commit and push
+7. Create pull request
+
 ## Distribution
 
 ### Build Artifacts
+
 ```bash
 ./scripts/build-release.sh
 # Creates:
@@ -220,56 +218,33 @@ TestFileOperations      # File I/O operations
 6. GitHub Actions creates release automatically
 7. Publish to PyPI (automated)
 
-## Development Workflow
+## Documentation
 
-### Setup
-```bash
-git clone https://github.com/jamespublishlab/markdown-fixer.git
-cd markdown-fixer
-pip install -e ".[dev]"
-```
+### Core Docs (in `docs/`)
 
-### Testing
-```bash
-pytest                          # Run all tests
-pytest --cov                    # With coverage
-pytest -v                       # Verbose
-pytest tests/test_core.py::TestListFormatting  # Specific test
-```
+| File | Purpose |
+|------|---------|
+| README.md | Documentation index |
+| getting-started.md | 5-minute quickstart |
+| installation.md | All installation methods |
+| usage.md | CLI and library reference |
+| integrations.md | Integration overview |
+| troubleshooting.md | Common issues |
+| structure.md | This file |
+| claude-desktop-setup.md | Non-technical guide |
 
-### Code Quality
-```bash
-black src/ tests/               # Format code
-ruff check src/ tests/          # Lint
-mypy src/                       # Type check
-```
+### Integration Docs
 
-### Making Changes
+Each integration has its own README:
 
-1. Create feature branch
-2. Make changes to `src/markdown_fixer/`
-3. Add tests to `tests/`
-4. Run tests: `pytest`
-5. Run linters: `black`, `ruff`, `mypy`
-6. Commit and push
-7. Create pull request
-
-## Documentation Hierarchy
-
-1. **README.md** - Start here, overview and quick start
-2. **IMPLEMENTATION_PLAN.md** - Detailed design and planning
-3. **STRUCTURE.md** - This file, project organization
-4. **CHANGELOG.md** - Version history
-5. **Integration READMEs** - Platform-specific guides
-   - `.claude/README.md`
-   - `integrations/jetbrains/README.md`
-   - `integrations/macos-app/README.md`
-   - `integrations/macos-quick-action/README.md`
-6. **Skill README** - `skill/README.md` - Claude Code skill
+- `.claude/README.md` - Claude Code
+- `integrations/jetbrains-plugin/README.md` - JetBrains
+- `integrations/macos-app/README.md` - macOS App
+- `integrations/macos-quick-action/README.md` - Quick Action
+- `integrations/mcp-server/README.md` - MCP Server
+- `skill/README.md` - Claude Code skill
 
 ## Contributing
-
-See main [README.md](README.md) for contribution guidelines.
 
 Key points:
 
@@ -281,4 +256,4 @@ Key points:
 
 ## License
 
-MIT - See [LICENSE](LICENSE) file.
+MIT - See [LICENSE](../LICENSE) file.

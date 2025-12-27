@@ -210,6 +210,6 @@ MIT License - See [LICENSE](../../LICENSE) in the project root.
 ## Links
 
 - [Main Project Documentation](../../README.md)
-- [Python CLI Documentation](../../GETTING_STARTED.md)
+- [Python CLI Documentation](../../docs/getting-started.md)
 - [JetBrains Plugin Development Docs](https://plugins.jetbrains.com/docs/intellij/)
 - [Report Issues](https://github.com/yourrepo/markdown-fixer/issues)

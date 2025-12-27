@@ -404,9 +404,9 @@ That's it! No magic, just connecting two programs together.
 
 ## 📚 Want to Learn More?
 
-- [What markdown-fixer fixes](README.md#what-it-fixes)
-- [Other ways to use it](GETTING_STARTED.md)
-- [Technical details](integrations/mcp-server/README.md) (for developers)
+- [What markdown-fixer fixes](../README.md#what-it-fixes)
+- [Other ways to use it](getting-started.md)
+- [Technical details](../integrations/mcp-server/README.md) (for developers)
 
 ---
 
