@@ -47,18 +47,28 @@ Builds all distribution artifacts for a new release.
 ./scripts/build-release.sh
 ```
 
-Creates in `dist/release-{version}/`:
+Creates in `dist/`:
 
-- Python wheel (`.whl`)
-- Source distribution (`.tar.gz`)
-- Quick Action package (`.zip`)
-- Mac App package (`.zip`, if build tools available)
-- `SHA256SUMS.txt`
+| File | Description |
+|------|-------------|
+| `markdown_fixer-VERSION-py3-none-any.whl` | Python wheel (pip/pipx install) |
+| `markdown_fixer-VERSION.tar.gz` | Python source distribution |
+| `markdown-fixer-VERSION-macos-quick-action.zip` | macOS Finder right-click integration |
+| `markdown-fixer-VERSION-jetbrains-plugin.zip` | JetBrains IDE plugin |
+| `SHA256SUMS.txt` | Checksums for all artifacts |
 
 **Prerequisites:**
 
 - Python build tools: `pip install build`
+- Java 17+ (for JetBrains plugin build)
 - Version set in `src/markdown_fixer/__version__.py`
+
+**Creating a GitHub release:**
+
+```bash
+# After running build-release.sh:
+gh release create vVERSION dist/*.whl dist/*.tar.gz dist/*.zip
+```
 
 ## See Also
 
