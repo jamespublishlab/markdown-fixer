@@ -18,9 +18,9 @@ markdown-fixer file.md --in-place
 # That's it!
 ```
 
-**New to markdown-fixer?** See [Getting Started Guide](GETTING_STARTED.md) for a 5-minute tutorial.
+**New to markdown-fixer?** See [Getting Started Guide](docs/GETTING_STARTED.md) for a 5-minute tutorial.
 
-**Using Claude Desktop?** → [Simple Setup (no coding!)](CLAUDE_DESKTOP_SIMPLE_SETUP.md)
+**Using Claude Desktop?** → [Simple Setup (no coding!)](docs/CLAUDE_DESKTOP_SIMPLE_SETUP.md)
 
 **Looking for a specific integration?:** [CLI](#command-line) | [macOS](#macos-quick-action) | [JetBrains](#jetbrains-ides-phpstorm-pycharm-intellij-webstorm) | [Claude Code](#claude-code-integration) | [Claude Desktop](#claude-desktop-mcp-server)
 
@@ -167,7 +167,7 @@ markdown-fixer --help
 
 Integrate directly into Claude Desktop via Model Context Protocol!
 
-**👉 Non-technical user?** → [Simple Setup Guide (no coding required!)](CLAUDE_DESKTOP_SIMPLE_SETUP.md)
+**👉 Non-technical user?** → [Simple Setup Guide (no coding required!)](docs/CLAUDE_DESKTOP_SIMPLE_SETUP.md)
 
 **Quick Install (for developers):**
 ```bash
@@ -357,17 +357,17 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Documentation
 
-- **[Getting Started Guide](GETTING_STARTED.md)** - 5-minute tutorial for new users
-- **[Documentation Index](DOCUMENTATION.md)** - Complete guide to all documentation
-- **[Project Structure](STRUCTURE.md)** - Architecture and development guide
-- **[Implementation Plan](IMPLEMENTATION_PLAN.md)** - Detailed technical specification
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** - 5-minute tutorial for new users
+- **[Documentation Index](docs/DOCUMENTATION.md)** - Complete guide to all documentation
+- **[Project Structure](docs/STRUCTURE.md)** - Architecture and development guide
+- **[Implementation Plan](docs/IMPLEMENTATION_PLAN.md)** - Detailed technical specification
 - **[Changelog](CHANGELOG.md)** - Version history
 
 ### Integration Guides
 
 - **[macOS Quick Action](integrations/macos-quick-action/README.md)** - Finder right-click
 - **[macOS App](integrations/macos-app/README.md)** - Drag-and-drop application
-- **[JetBrains IDE](integrations/jetbrains/README.md)** - PyCharm, IntelliJ, etc.
+- **[JetBrains IDE](integrations/jetbrains-plugin/README.md)** - PyCharm, IntelliJ, etc.
 - **[Claude Code](.claude/README.md)** - Slash commands, skill, auto-fix
 - **[Claude Desktop MCP Server](integrations/mcp-server/README.md)** - AI integration
 
