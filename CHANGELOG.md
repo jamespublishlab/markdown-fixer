@@ -5,71 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2025-12-27
 
-### Added
-
-- **Table Formatting**: Automatically formats markdown tables with proper alignment and column widths
-- **Unicode Support**: Full support for CJK characters (中文, 日本語) and emoji (😀, ✅) in tables
-- **Native JetBrains Plugin**: Complete rewrite as a native IntelliJ Platform plugin (replaces external tool)
-- Claude Desktop MCP Server integration (Model Context Protocol)
-- Claude Code skill for AI-guided markdown fixing
-- Claude Code auto-fix hook (fixes markdown on save)
-- Comprehensive GETTING_STARTED.md guide (5-minute quickstart)
-- Complete DOCUMENTATION.md index with navigation for all docs
-- Quick start section in main README
-
-### Improved
-
-- Table formatting uses `wcwidth` (Python) and `icu4j` (Kotlin) for accurate Unicode width calculation
-- JetBrains plugin now works via right-click in both Project View and Editor
-- Better documentation navigation and discoverability
-- Cross-references between all documentation files
-- Documentation section in README with all guides linked
-
-### Fixed
-
-- Delimiter row formatting now correctly accounts for cell padding in tables
-- Escaped pipes (`\|`) are now preserved in table cells
-
-## [1.0.0] - 2025-10-25
-
-### Added
-
-- Initial release
-- Core markdown formatting engine
-- CLI tool with multiple options (--in-place, --dry-run, --output, --verbose)
-- macOS Quick Action integration for Finder
-- macOS drag-and-drop application
-- JetBrains IDE external tool integration (PhpStorm, PyCharm, IntelliJ, WebStorm)
-- Universal installer script for macOS
-- Comprehensive test suite with 80%+ coverage
-- Support for blank line insertion around lists
-- Field metadata to bullet list conversion
-- Excessive newline normalization
-- Code-block awareness (never modifies code blocks)
+Initial release of markdown-fixer.
 
 ### Features
 
-- **Blank Lines Around Lists**: Automatically adds proper spacing before and after lists
+- **Blank Lines Around Block Elements**: Adds proper spacing around headings, lists, code blocks, and tables
 - **Field Metadata Conversion**: Converts 2+ consecutive `**Key:** value` patterns to bulleted lists
-- **Newline Normalization**: Collapses 3+ consecutive newlines to exactly 2
-- **Smart Processing**: Never modifies content inside code blocks
-- **Multi-Platform Support**: Available as CLI, macOS Quick Action, macOS App, and JetBrains plugin
+- **Newline Normalization**: Collapses 3+ consecutive blank lines to 2
+- **Table Formatting**: Auto-formats tables with proper alignment and column widths
+- **Unicode Support**: Handles CJK characters and emoji correctly in tables
+- **Horizontal Rule Removal**: Removes decorative `---`, `***`, `___` separators
+- **Smart Processing**: Never modifies content inside code blocks or blockquotes
 
-### Installation Methods
+### Integrations
+
+- **CLI**: Command-line tool with `--in-place`, `--dry-run`, `--output`, `--verbose` options
+- **macOS Quick Action**: Right-click integration in Finder
+- **macOS App**: Drag-and-drop application
+- **JetBrains Plugin**: Native plugin for PyCharm, IntelliJ, PhpStorm, WebStorm
+- **Claude Code**: Slash commands, AI skill, and auto-fix hook
+- **Claude Desktop**: MCP Server integration (Model Context Protocol)
+
+### Installation
 
 - Python package via pip/pipx
-- Homebrew formula (via tap)
-- Universal installer script
-- Manual installation for all integrations
+- Homebrew formula (`brew tap jamespublishlab/tap`)
+- Universal installer script for macOS
 
 ### Documentation
 
-- Comprehensive README with usage examples
-- Integration guides for macOS Quick Action, macOS App, and JetBrains IDEs
-- Build and release automation scripts
-- Developer setup and contribution guidelines
+- Getting started guide (5-minute quickstart)
+- Consolidated docs in `docs/` folder
+- Integration guides for each platform
+- Developer documentation and contribution guidelines
 
-[Unreleased]: https://github.com/jamespublishlab/markdown-fixer/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/jamespublishlab/markdown-fixer/releases/tag/v1.0.0
