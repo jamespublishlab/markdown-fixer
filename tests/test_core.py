@@ -1,6 +1,99 @@
 """Tests for core markdown fixing functionality."""
 
-from markdown_fixer import MarkdownFixer
+from markdown_fixer import MarkdownFixer, looks_like_markdown
+
+
+class TestLooksLikeMarkdown:
+    """Test heuristic markdown content detection."""
+
+    def test_empty_content_returns_false(self):
+        assert looks_like_markdown("") is False
+
+    def test_short_content_returns_false(self):
+        assert looks_like_markdown("Hello") is False
+
+    def test_plain_text_returns_false(self):
+        content = "This is just plain text without any markdown formatting."
+        assert looks_like_markdown(content) is False
+
+    def test_header_only_returns_false(self):
+        """Single indicator is below default threshold of 2."""
+        content = "# Just a header"
+        assert looks_like_markdown(content) is False
+
+    def test_header_with_list_returns_true(self):
+        content = """# Header
+- List item"""
+        assert looks_like_markdown(content) is True
+
+    def test_frontmatter_with_header_returns_true(self):
+        content = """---
+title: Test
+---
+# Header"""
+        assert looks_like_markdown(content) is True
+
+    def test_bold_and_link_returns_true(self):
+        content = "This has **bold text** and a [link](http://example.com)."
+        assert looks_like_markdown(content) is True
+
+    def test_code_block_with_header_returns_true(self):
+        content = """# Code Example
+```python
+print("hello")
+```"""
+        assert looks_like_markdown(content) is True
+
+    def test_ordered_list_with_header_returns_true(self):
+        content = """# Steps
+1. First step
+2. Second step"""
+        assert looks_like_markdown(content) is True
+
+    def test_blockquote_with_list_returns_true(self):
+        content = """> Important note
+- Item 1"""
+        assert looks_like_markdown(content) is True
+
+    def test_wiki_link_with_header_returns_true(self):
+        content = """# My Note
+See also [[Other Note]]"""
+        assert looks_like_markdown(content) is True
+
+    def test_threshold_parameter(self):
+        """Test custom threshold parameter."""
+        content = "# Header with enough characters"  # Only one indicator
+
+        # With threshold=1, should return True
+        assert looks_like_markdown(content, threshold=1) is True
+
+        # With threshold=2 (default), should return False
+        assert looks_like_markdown(content, threshold=2) is False
+
+    def test_code_content_returns_false(self):
+        """Python code without markdown features should return False."""
+        content = """def hello():
+    print("Hello, world!")
+    return True"""
+        assert looks_like_markdown(content) is False
+
+    def test_json_content_returns_false(self):
+        """JSON content should return False."""
+        content = '{"name": "test", "value": 123}'
+        assert looks_like_markdown(content) is False
+
+    def test_typical_obsidian_note_returns_true(self):
+        """Typical Obsidian note with frontmatter and wiki-links."""
+        content = """---
+tags: [test]
+---
+# My Note
+
+This links to [[Another Note]] and has a **key point**.
+
+- Item 1
+- Item 2"""
+        assert looks_like_markdown(content) is True
 
 
 class TestHeadingFormatting:

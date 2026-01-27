@@ -15,6 +15,37 @@ except ImportError:
     HAS_WCWIDTH = False
 
 
+def looks_like_markdown(content: str, threshold: int = 2) -> bool:
+    """
+    Heuristic detection of markdown content.
+
+    Args:
+        content: String to analyze
+        threshold: Minimum number of indicators required (default: 2)
+
+    Returns:
+        True if content appears to be markdown
+    """
+    if not content or len(content) < 10:
+        return False
+
+    indicators = [
+        r"^---\s*\n",  # YAML frontmatter
+        r"^#{1,6}\s+\S",  # Headers at start
+        r"\n#{1,6}\s+\S",  # Headers mid-content
+        r"\*\*[^*]+\*\*",  # Bold
+        r"\[[^\]]+\]\([^)]+\)",  # Links
+        r"^\s*[-*+]\s+\S",  # Unordered lists
+        r"^\s*\d+\.\s+\S",  # Ordered lists
+        r"```",  # Code blocks
+        r"^\s*>\s+",  # Blockquotes
+        r"\[\[[^\]]+\]\]",  # Wiki-links (Obsidian)
+    ]
+
+    matches = sum(1 for p in indicators if re.search(p, content, re.MULTILINE))
+    return matches >= threshold
+
+
 class MarkdownFixer:
     """Fixes common markdown formatting issues."""
 
