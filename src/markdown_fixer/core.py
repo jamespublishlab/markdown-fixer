@@ -96,6 +96,25 @@ class MarkdownFixer:
             output.write_text(formatted, encoding="utf-8")
             return str(output)
 
+    @staticmethod
+    def _extract_frontmatter(content: str) -> Tuple[str, List[str]]:
+        """Extract YAML frontmatter from content if present.
+
+        Returns:
+            (frontmatter_str, remaining_lines) - frontmatter_str is empty
+            string if no frontmatter found. remaining_lines is the content
+            after frontmatter, already split into lines.
+        """
+        lines = content.split("\n")
+        if not content.startswith("---"):
+            return ("", lines)
+        # Find closing fence (must be on its own line after the opening)
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                frontmatter = "\n".join(lines[: i + 1])
+                return (frontmatter, lines[i + 1 :])
+        return ("", lines)
+
     def fix_string(self, content: str) -> str:
         """
         Fix markdown content string.
@@ -106,7 +125,8 @@ class MarkdownFixer:
         Returns:
             Formatted markdown content
         """
-        lines = content.split("\n")
+        # Preserve YAML frontmatter (e.g. Obsidian notes)
+        frontmatter, lines = self._extract_frontmatter(content)
         result: List[str] = []
         in_code_block = False
         just_exited_block = False  # Track if we just exited a block element
@@ -212,6 +232,19 @@ class MarkdownFixer:
                 i = table_end_idx + 1
                 continue
 
+            # Check if this is a standalone image
+            if self._is_standalone_image(line):
+                if field_metadata_buffer:
+                    self._flush_field_metadata(result, field_metadata_buffer, lines, i)
+                    field_metadata_buffer = []
+                if in_list:
+                    in_list = False
+                ensure_blank_before()
+                result.append(line)
+                just_exited_block = True
+                i += 1
+                continue
+
             # Check if this is field-style metadata
             if self._is_field_metadata(line):
                 # Extract the field and value - try all patterns
@@ -273,6 +306,10 @@ class MarkdownFixer:
         # Collapse 3+ consecutive newlines to exactly 2 (one blank line)
         formatted = re.sub(r"\n{3,}", "\n\n", formatted)
 
+        # Re-attach frontmatter
+        if frontmatter:
+            formatted = frontmatter + "\n\n" + formatted.lstrip("\n")
+
         return formatted
 
     def _flush_field_metadata(self, result: list, buffer: list, lines: list, next_line_idx: int):
@@ -319,6 +356,15 @@ class MarkdownFixer:
             or re.match(r"^\*\*[^*:]+\*\*:\s+.+$", stripped)
             or re.match(r"^\*\*[^*]+\*\*[^:]*:\s+.+$", stripped)
         )
+
+    _STANDALONE_IMAGE_RE = re.compile(
+        r"^(?:!\[[^\]]*\]\([^)]+\)|!\[\[[^\]]+\]\])$"  # ![alt](url) or ![[wikilink]]
+    )
+
+    @staticmethod
+    def _is_standalone_image(line: str) -> bool:
+        """Check if line is a standalone image (the only content on the line)."""
+        return bool(MarkdownFixer._STANDALONE_IMAGE_RE.match(line.strip()))
 
     @staticmethod
     def _is_code_fence(line: str) -> bool:

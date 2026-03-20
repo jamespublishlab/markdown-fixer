@@ -491,6 +491,92 @@ class TestBlockquoteHandling:
         assert "> Quote text\n\n- List item" in result
 
 
+class TestImageFormatting:
+    """Test blank lines around standalone images."""
+
+    def test_blank_lines_around_markdown_image(self):
+        input_md = "Text before\n![alt](image.png)\nText after"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert "Text before\n\n![alt](image.png)\n\nText after" == result
+
+    def test_blank_lines_around_wiki_image(self):
+        input_md = "Text before\n![[screenshot.png]]\nText after"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert "Text before\n\n![[screenshot.png]]\n\nText after" == result
+
+    def test_inline_image_not_affected(self):
+        input_md = "Text with ![alt](img.png) inline"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert result == input_md
+
+    def test_image_in_list_not_standalone(self):
+        input_md = "- ![img](x.png)\n- item"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert "- ![img](x.png)\n- item" == result
+
+
+class TestFrontmatterPreservation:
+    """Test YAML frontmatter is preserved (e.g. Obsidian notes)."""
+
+    def test_obsidian_frontmatter_preserved(self):
+        input_md = """---
+title: My Note
+tags: [project, active]
+date: 2026-03-20
+---
+
+# My Note
+
+Some content here."""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert result.startswith("---\ntitle: My Note")
+        assert "---\n\n# My Note" in result
+
+    def test_frontmatter_with_formatting_fixes(self):
+        input_md = """---
+title: Test
+---
+
+# Header
+**Key:** value1
+**Key2:** value2
+Some text
+- item 1
+- item 2
+More text"""
+
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert result.startswith("---\ntitle: Test\n---")
+        assert "- **Key:**" in result
+        assert "\n\n- item 1" in result
+
+    def test_no_frontmatter_unchanged(self):
+        input_md = "# Hello\n\nSome text"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert result == input_md
+
+    def test_empty_frontmatter(self):
+        input_md = "---\n---\n\n# Hello"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert result.startswith("---\n---")
+
+    def test_unclosed_frontmatter_not_treated_as_frontmatter(self):
+        """A --- without a closing --- should be treated as a horizontal rule."""
+        input_md = "---\nJust text"
+        fixer = MarkdownFixer()
+        result = fixer.fix_string(input_md)
+        assert not result.startswith("---")
+
+
 class TestComplexCombinations:
     """Test realistic complex scenarios."""
 
