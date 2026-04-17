@@ -50,13 +50,15 @@ def main():
 
     # Only output if changed
     if cleaned and cleaned != content:
+        updated_input = dict(tool_input)
+        updated_input["content"] = cleaned
         print(
             json.dumps(
                 {
                     "hookSpecificOutput": {
                         "hookEventName": "PreToolUse",
                         "permissionDecision": "allow",
-                        "updatedInput": {"content": cleaned},
+                        "updatedInput": updated_input,
                     }
                 }
             )
