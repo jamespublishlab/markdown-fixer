@@ -4,6 +4,7 @@ PreToolUse hook: Clean markdown content before writing.
 Intercepts Write, Edit, and Obsidian MCP tools.
 """
 import json
+import os
 import sys
 
 
@@ -22,22 +23,28 @@ def main():
         or ""
     )
 
+    # Honor MARKDOWN_FIXER_EXCLUDE_PREFIXES (colon-separated path prefixes)
+    exclude_prefixes = [
+        p for p in os.environ.get("MARKDOWN_FIXER_EXCLUDE_PREFIXES", "").split(":") if p
+    ]
+    if filename and any(filename.startswith(p) for p in exclude_prefixes):
+        sys.exit(0)
+
     content = tool_input.get("content", "")
     if not content:
         sys.exit(0)
 
-    # Import markdown_fixer (includes looks_like_markdown utility)
-    try:
-        from markdown_fixer import MarkdownFixer, looks_like_markdown
-    except ImportError:
-        # markdown-fixer not installed, pass through
+    # Only process files with a .md extension. Inferring markdown from content
+    # false-positives on code files that use '#' comments (shell, Python, YAML,
+    # Dockerfiles, etc.), so gate strictly on the file extension.
+    if not filename.lower().endswith(".md"):
         sys.exit(0)
 
-    # Check if markdown
-    is_md_file = filename.lower().endswith(".md")
-    is_md_content = looks_like_markdown(content)
-
-    if not (is_md_file or is_md_content):
+    # Import markdown_fixer
+    try:
+        from markdown_fixer import MarkdownFixer
+    except ImportError:
+        # markdown-fixer not installed, pass through
         sys.exit(0)
 
     # Run fixer
