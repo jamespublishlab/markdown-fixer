@@ -45,7 +45,6 @@ def assert_no_content_lost(input_md: str, output_md: str) -> None:
         if available < count - allowed_loss:
             lost.append((word, count, available))
 
-    assert not lost, (
-        "Content lost during fix_string(): "
-        + ", ".join(f"'{w}' {before_n} -> {after_n}" for w, before_n, after_n in lost)
+    assert not lost, "Content lost during fix_string(): " + ", ".join(
+        f"'{w}' {before_n} -> {after_n}" for w, before_n, after_n in lost
     )

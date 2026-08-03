@@ -1,7 +1,6 @@
 """Tests for the no-content-lost invariant helper."""
 
 import pytest
-
 from support import assert_no_content_lost
 
 

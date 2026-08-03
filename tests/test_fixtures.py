@@ -4,9 +4,9 @@ the fixer and diffed against a hand-reviewed expected output."""
 from pathlib import Path
 
 import pytest
+from support import assert_no_content_lost
 
 from markdown_fixer import MarkdownFixer
-from support import assert_no_content_lost
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

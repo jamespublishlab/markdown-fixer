@@ -1,7 +1,8 @@
 """Tests for core markdown fixing functionality."""
 
-from markdown_fixer import MarkdownFixer, looks_like_markdown
 from support import assert_no_content_lost
+
+from markdown_fixer import MarkdownFixer, looks_like_markdown
 
 
 class TestLooksLikeMarkdown:
