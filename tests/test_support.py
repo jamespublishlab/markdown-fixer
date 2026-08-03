@@ -29,8 +29,10 @@ class TestAssertNoContentLost:
         # A line matching the horizontal-rule pattern inside a code fence
         # should NOT have its words excused, because the fixer preserves
         # code fences verbatim.
-        input_md = "Text\n\n```\nfenced\n---\n```\n\nMore"
-        output_md = "Text\n\n```\n---\n```\n\nMore"
+        # Uses ___ (not ---) because underscore is a word character,
+        # so this test actually exercises the fence-tracking fix.
+        input_md = "Text\n\n```\n___\n```\n\nMore"
+        output_md = "Text\n\n```\n```\n\nMore"
 
-        with pytest.raises(AssertionError, match="fenced"):
+        with pytest.raises(AssertionError, match="___"):
             assert_no_content_lost(input_md, output_md)
