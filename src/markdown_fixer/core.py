@@ -254,9 +254,6 @@ class MarkdownFixer:
                 if not match:
                     # Try **Key**: value (colon outside bold)
                     match = re.match(r"^\*\*([^*:]+)\*\*:\s+(.+)$", stripped)
-                if not match:
-                    # Try **Key**text: value (edge case with text between bold and colon)
-                    match = re.match(r"^\*\*([^*]+)\*\*[^:]*:\s+(.+)$", stripped)
 
                 if match:
                     field, value = match.groups()
@@ -345,16 +342,14 @@ class MarkdownFixer:
 
     @staticmethod
     def _is_field_metadata(line: str) -> bool:
-        """Check if a line is field-style metadata: **Key:** value or **Key**: value or **Key**text: value"""
+        """Check if a line is field-style metadata: **Key:** value or **Key**: value"""
         stripped = line.strip()
-        # Match various field metadata patterns:
+        # Match field metadata patterns:
         # 1. **Key:** value (colon inside bold)
         # 2. **Key**: value (colon outside bold)
-        # 3. **Key**text: value (text between bold and colon - edge case)
         return bool(
             re.match(r"^\*\*[^*]+:\*\*\s+.+$", stripped)
             or re.match(r"^\*\*[^*:]+\*\*:\s+.+$", stripped)
-            or re.match(r"^\*\*[^*]+\*\*[^:]*:\s+.+$", stripped)
         )
 
     _STANDALONE_IMAGE_RE = re.compile(

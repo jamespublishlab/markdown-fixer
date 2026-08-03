@@ -374,6 +374,17 @@ More text"""
         fixer = MarkdownFixer()
         assert fixer.fix_string(input_md) == expected
 
+    def test_bold_lead_in_with_later_colon_not_mangled(self):
+        """Regression test: prose with a bold lead-in and an unrelated
+        colon later in the sentence must pass through unchanged, not be
+        treated as field metadata and lose the text between them."""
+        input_md = (
+            "**Required fix.** Rebase Task 5b on this: the accessor is X."
+        )
+
+        fixer = MarkdownFixer()
+        assert fixer.fix_string(input_md) == input_md
+
 
 class TestNewlineCollapsing:
     """Test excessive newline removal."""
