@@ -24,3 +24,14 @@ def test_golden_fixture(fixture_dir):
 
     assert result == expected
     assert_no_content_lost(input_md, result)
+
+
+def test_fixtures_directory_is_not_empty():
+    """Guard against a silently-green suite: if tests/fixtures/ is ever
+    empty (e.g. accidentally gitignored, moved, or lost in packaging),
+    discover_fixtures() would return an empty list, pytest's parametrize
+    would produce zero test cases, and the suite would report a skip
+    instead of failing loudly."""
+    assert (
+        discover_fixtures()
+    ), "No fixtures found in tests/fixtures/ — golden-fixture coverage would be silently zero"
