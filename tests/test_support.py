@@ -24,3 +24,13 @@ class TestAssertNoContentLost:
         output_md = "Use `___` for underscore emphasis.\n\nDone."
 
         assert_no_content_lost(input_md, output_md)  # should not raise
+
+    def test_does_not_excuse_horizontal_rule_lines_inside_code_fences(self):
+        # A line matching the horizontal-rule pattern inside a code fence
+        # should NOT have its words excused, because the fixer preserves
+        # code fences verbatim.
+        input_md = "Text\n\n```\nfenced\n---\n```\n\nMore"
+        output_md = "Text\n\n```\n---\n```\n\nMore"
+
+        with pytest.raises(AssertionError, match="fenced"):
+            assert_no_content_lost(input_md, output_md)

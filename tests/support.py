@@ -16,8 +16,12 @@ def _words_on_removed_horizontal_rules(input_md: str) -> Counter:
     from markdown_fixer.core import MarkdownFixer
 
     removed = Counter()
+    in_code_block = False
     for line in input_md.split("\n"):
-        if MarkdownFixer._is_horizontal_rule(line):
+        if MarkdownFixer._is_code_fence(line):
+            in_code_block = not in_code_block
+            continue
+        if not in_code_block and MarkdownFixer._is_horizontal_rule(line):
             removed.update(_word_counts(line))
     return removed
 
