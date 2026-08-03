@@ -1,6 +1,7 @@
 """Tests for core markdown fixing functionality."""
 
 from markdown_fixer import MarkdownFixer, looks_like_markdown
+from support import assert_no_content_lost
 
 
 class TestLooksLikeMarkdown:
@@ -108,7 +109,9 @@ class TestHeadingFormatting:
 # Header"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_blank_line_after_heading(self):
         input_md = """# Header
@@ -119,7 +122,9 @@ Some text"""
 Some text"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_blank_lines_both_sides_of_heading(self):
         input_md = """First paragraph
@@ -133,7 +138,9 @@ Content here"""
 Content here"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_heading_at_start_no_blank_before(self):
         """First line heading should not have blank line before."""
@@ -145,7 +152,9 @@ Some text"""
 Some text"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_multiple_headings(self):
         input_md = """# Title
@@ -168,7 +177,9 @@ Content 1
 Content 2"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
 
 class TestHorizontalRuleRemoval:
@@ -184,7 +195,9 @@ Second section"""
 Second section"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_remove_many_dashes(self):
         input_md = """First
@@ -196,7 +209,9 @@ Second"""
 Second"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_remove_asterisk_rule(self):
         input_md = """First
@@ -208,7 +223,9 @@ Second"""
 Second"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_remove_underscore_rule(self):
         input_md = """First
@@ -220,7 +237,9 @@ Second"""
 Second"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_remove_spaced_rule(self):
         input_md = """First
@@ -232,7 +251,9 @@ Second"""
 Second"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_preserve_dashes_in_code_block(self):
         """Horizontal rules inside code blocks should not be removed."""
@@ -243,6 +264,7 @@ Second"""
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert "---" in result
+        assert_no_content_lost(input_md, result)
 
     def test_dont_remove_list_item(self):
         """A line starting with dash and space is a list item, not a rule."""
@@ -253,6 +275,7 @@ Second"""
         result = fixer.fix_string(input_md)
         assert "- Item 1" in result
         assert "- Item 2" in result
+        assert_no_content_lost(input_md, result)
 
 
 class TestListFormatting:
@@ -269,7 +292,9 @@ class TestListFormatting:
 - Item 2"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_blank_line_after_list(self):
         input_md = """- Item 1
@@ -282,7 +307,9 @@ Next paragraph"""
 Next paragraph"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_blank_lines_both_sides(self):
         input_md = """# Header
@@ -298,7 +325,9 @@ Next paragraph"""
 Next paragraph"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_ordered_list(self):
         input_md = """Text
@@ -314,7 +343,9 @@ More text"""
 More text"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
 
 class TestFieldMetadata:
@@ -332,6 +363,7 @@ class TestFieldMetadata:
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md).strip()
         assert result == expected.strip()
+        assert_no_content_lost(input_md, result)
 
     def test_three_consecutive_fields(self):
         input_md = """**Purpose:** Guide
@@ -347,6 +379,7 @@ class TestFieldMetadata:
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md).strip()
         assert result == expected.strip()
+        assert_no_content_lost(input_md, result)
 
     def test_single_field_no_bullet(self):
         input_md = """**Purpose:** Single field"""
@@ -354,7 +387,9 @@ class TestFieldMetadata:
         expected = """**Purpose:** Single field"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_fields_with_blank_lines_around(self):
         input_md = """# Section
@@ -372,7 +407,9 @@ More text"""
 More text"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_bold_lead_in_with_later_colon_not_mangled(self):
         """Regression test: prose with a bold lead-in and an unrelated
@@ -383,7 +420,9 @@ More text"""
         )
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == input_md
+        result = fixer.fix_string(input_md)
+        assert result == input_md
+        assert_no_content_lost(input_md, result)
 
 
 class TestNewlineCollapsing:
@@ -400,7 +439,9 @@ Section 2"""
 Section 2"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_many_newlines_collapsed(self):
         input_md = """Section 1
@@ -415,7 +456,9 @@ Section 2"""
 Section 2"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_double_newlines_preserved(self):
         input_md = """Paragraph 1
@@ -427,7 +470,9 @@ Paragraph 2"""
 Paragraph 2"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
 
 class TestCodeBlockHandling:
@@ -448,6 +493,7 @@ More text"""
         # Code block content should be unchanged
         assert "- not a list" in result
         assert "**Key:** not metadata" in result
+        assert_no_content_lost(input_md, result)
 
     def test_list_before_code_block(self):
         input_md = """- List item
@@ -460,6 +506,7 @@ Text"""
         result = fixer.fix_string(input_md)
         # Should have blank line after list and before text
         assert result.count("\n\n") >= 2
+        assert_no_content_lost(input_md, result)
 
 
 class TestBlockquoteHandling:
@@ -478,6 +525,7 @@ class TestBlockquoteHandling:
         assert "> **Warning:**" in result
         # Should NOT be converted to bullet lists
         assert "- **Note:**" not in result
+        assert_no_content_lost(input_md, result)
 
     def test_list_before_blockquote(self):
         """Ensure blank line between list and blockquote."""
@@ -489,6 +537,7 @@ class TestBlockquoteHandling:
 
         # Should have blank line between list and blockquote
         assert "- List item\n\n>" in result
+        assert_no_content_lost(input_md, result)
 
     def test_blockquote_before_list(self):
         """Blockquote followed by list should work correctly."""
@@ -500,6 +549,7 @@ class TestBlockquoteHandling:
 
         # Should have blank line between blockquote and list
         assert "> Quote text\n\n- List item" in result
+        assert_no_content_lost(input_md, result)
 
 
 class TestImageFormatting:
@@ -510,24 +560,28 @@ class TestImageFormatting:
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert "Text before\n\n![alt](image.png)\n\nText after" == result
+        assert_no_content_lost(input_md, result)
 
     def test_blank_lines_around_wiki_image(self):
         input_md = "Text before\n![[screenshot.png]]\nText after"
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert "Text before\n\n![[screenshot.png]]\n\nText after" == result
+        assert_no_content_lost(input_md, result)
 
     def test_inline_image_not_affected(self):
         input_md = "Text with ![alt](img.png) inline"
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert result == input_md
+        assert_no_content_lost(input_md, result)
 
     def test_image_in_list_not_standalone(self):
         input_md = "- ![img](x.png)\n- item"
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert "- ![img](x.png)\n- item" == result
+        assert_no_content_lost(input_md, result)
 
 
 class TestFrontmatterPreservation:
@@ -548,6 +602,7 @@ Some content here."""
         result = fixer.fix_string(input_md)
         assert result.startswith("---\ntitle: My Note")
         assert "---\n\n# My Note" in result
+        assert_no_content_lost(input_md, result)
 
     def test_frontmatter_with_formatting_fixes(self):
         input_md = """---
@@ -567,18 +622,21 @@ More text"""
         assert result.startswith("---\ntitle: Test\n---")
         assert "- **Key:**" in result
         assert "\n\n- item 1" in result
+        assert_no_content_lost(input_md, result)
 
     def test_no_frontmatter_unchanged(self):
         input_md = "# Hello\n\nSome text"
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert result == input_md
+        assert_no_content_lost(input_md, result)
 
     def test_empty_frontmatter(self):
         input_md = "---\n---\n\n# Hello"
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert result.startswith("---\n---")
+        assert_no_content_lost(input_md, result)
 
     def test_unclosed_frontmatter_not_treated_as_frontmatter(self):
         """A --- without a closing --- should be treated as a horizontal rule."""
@@ -586,6 +644,7 @@ More text"""
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
         assert not result.startswith("---")
+        assert_no_content_lost(input_md, result)
 
 
 class TestComplexCombinations:
@@ -625,6 +684,7 @@ End of section."""
 
         # Should have collapsed triple newlines
         assert "\n\n\n" not in result
+        assert_no_content_lost(input_md, result)
 
 
 class TestTableFormatting:
@@ -642,7 +702,9 @@ class TestTableFormatting:
 | longer value | v2       | v3       |"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_table_with_alignment(self):
         input_md = """| Left|Center|Right|
@@ -654,7 +716,9 @@ class TestTableFormatting:
 | Text |  Text  |  Text |"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_table_with_varying_widths(self):
         input_md = """| Short|Medium length|Very long column content here|
@@ -666,7 +730,9 @@ class TestTableFormatting:
 | A     | B             | C                             |"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_table_with_emoji(self):
         input_md = """| Feature|Status|Notes|
@@ -681,6 +747,7 @@ class TestTableFormatting:
         assert "✅" in result
         assert "😀" in result
         assert "|" in result
+        assert_no_content_lost(input_md, result)
 
     def test_table_with_cjk_characters(self):
         input_md = """| Product|Price|
@@ -695,6 +762,7 @@ class TestTableFormatting:
         assert "Coffee" in result
         assert "咖啡" in result
         assert "|" in result
+        assert_no_content_lost(input_md, result)
 
     def test_table_with_empty_cells(self):
         input_md = """| Col1|Col2|Col3|
@@ -708,7 +776,9 @@ class TestTableFormatting:
 | X    |      | Z    |"""
 
         fixer = MarkdownFixer()
-        assert fixer.fix_string(input_md) == expected
+        result = fixer.fix_string(input_md)
+        assert result == expected
+        assert_no_content_lost(input_md, result)
 
     def test_malformed_table_missing_cells(self):
         input_md = """| Col1|Col2|Col3|
@@ -724,6 +794,7 @@ class TestTableFormatting:
         lines = result.split("\n")
         for line in lines:
             assert line.count("|") == 4  # 4 pipes = 3 columns
+        assert_no_content_lost(input_md, result)
 
     def test_malformed_table_extra_cells(self):
         input_md = """| A|B|C|
@@ -756,6 +827,7 @@ End"""
         # Table inside code block should NOT be formatted
         assert "|Unformatted|Table|" in result
         assert "|stays|unformatted|" in result
+        assert_no_content_lost(input_md, result)
 
     def test_multiple_tables_in_document(self):
         input_md = """# Document
@@ -776,6 +848,7 @@ Some text
         # Both tables should be formatted
         assert "| Table1 |" in result
         assert "| Table2 |" in result
+        assert_no_content_lost(input_md, result)
 
     def test_no_table_present(self):
         input_md = """# Regular Document
@@ -789,6 +862,7 @@ Just some text with | a pipe | character."""
 
         # Should remain unchanged (pipe character alone doesn't make a table)
         assert result == input_md
+        assert_no_content_lost(input_md, result)
 
     def test_table_formatting_real_world(self):
         input_md = """# API Documentation
@@ -813,6 +887,7 @@ Just some text with | a pipe | character."""
 
         # Check center alignment preserved for Method column in delimiter (index 1)
         assert ":------:" in table_lines[1] or ":-----:" in table_lines[1]
+        assert_no_content_lost(input_md, result)
 
     def test_table_with_escaped_pipes(self):
         input_md = r"""| Expression|Meaning|
@@ -824,6 +899,7 @@ Just some text with | a pipe | character."""
 
         # Escaped pipe should be preserved
         assert r"a \| b" in result
+        assert_no_content_lost(input_md, result)
 
     def test_table_mixed_unicode(self):
         input_md = """| Item|Price|Status|
@@ -840,6 +916,7 @@ Just some text with | a pipe | character."""
         assert "🍵" in result
         assert "水" in result
         assert "✅" in result
+        assert_no_content_lost(input_md, result)
 
 
 class TestFileOperations:
