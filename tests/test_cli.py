@@ -89,9 +89,26 @@ class TestCLI:
         assert "Processing:" in out
 
     def test_missing_file_errors(self, tmp_path, capsys):
-        """click.Path(exists=True) gave this for free; argparse does not."""
-        code = run_cli([str(tmp_path / "does-not-exist.md")])
+        """click.Path(exists=True) gave this for free; argparse does not.
+
+        --dry-run is load-bearing: without it, core.py's own FileNotFoundError
+        satisfies the assertion even when the cli.py check is absent.
+        """
+        code = run_cli([str(tmp_path / "does-not-exist.md"), "--dry-run"])
         err = capsys.readouterr().err
 
         assert code == 1
         assert "not found" in err.lower()
+
+    def test_multiple_files_fail_fast_before_any_are_modified(self, tmp_path, capsys):
+        """A missing file aborts the run before earlier files are touched."""
+        good = tmp_path / "good.md"
+        original = "# Header\n- List item\nText"
+        good.write_text(original)
+
+        code = run_cli([str(good), str(tmp_path / "missing.md"), "--in-place"])
+        err = capsys.readouterr().err
+
+        assert code == 1
+        assert "not found" in err.lower()
+        assert good.read_text() == original, "earlier file was modified before the run aborted"

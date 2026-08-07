@@ -62,14 +62,15 @@ def fix_files(args):
         print("Error: --output can only be used with a single input file", file=sys.stderr)
         return 1
 
+    for filepath in args.files:
+        if not Path(filepath).exists():
+            print(f"Error: file not found: {filepath}", file=sys.stderr)
+            return 1
+
     fixer = MarkdownFixer()
 
     for filepath in args.files:
         path = Path(filepath)
-
-        if not path.exists():
-            print(f"Error: file not found: {filepath}", file=sys.stderr)
-            return 1
 
         try:
             if args.verbose:
