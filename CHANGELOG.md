@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Claude Code hook is now installed as a subcommand, so its settings.json entry contains no absolute paths and is identical on every machine
 - The MCP server moved from `integrations/mcp-server/server.py` into `markdown_fixer.mcp_server`, removing a `sys.path` manipulation
 - The hook is now **opt-in**: unset means off. It must be armed per machine via config or env var
-- **Installation for POSIX systems (macOS, Linux):** The new `install-all.sh` builds a self-contained zipapp and copies it to `~/.local/bin/markdown-fixer`, creating a `mdfixer` symlink alongside. Existing pipx-based installs are automatically cleaned up. Windows users continue to use `pip install`
+- **New install path (macOS):** `./scripts/install-all.sh --cli` builds the zipapp and installs it to `~/.local/bin/markdown-fixer` with `mdfixer` as a symlink. The installer script is macOS-only (`install-all.sh` exits on non-darwin systems); on Linux, build the zipapp with `scripts/build-zipapp.sh` and copy it to `~/.local/bin` yourself — the artifact carries a `/usr/bin/env python3` shebang and runs on any POSIX system. Windows users continue to use `pip install`. **Users upgrading from a pipx install should run `pipx uninstall markdown-fixer`** to clean up the orphaned venv; the installer only replaces the symlinks to avoid overwriting the venv binary
 
 ### Fixed
 - **MCP server stability:** JSON-RPC frames that are not dictionaries (e.g. bare `123`) no longer crash the stdin read loop and drop queued requests; the server now returns JSON-RPC error `-32600` (Invalid Request)
