@@ -120,20 +120,33 @@ class TestArmingSourceEnvClassification:
     wrong is exactly the kind of misdiagnosis doctor exists to prevent."""
 
     @pytest.mark.parametrize(
-        "env_value,recognised",
+        "env_value,recognised,armed",
         [
-            ("1", True),
-            ("0", True),
-            ("TRUE", True),
-            (" yes ", True),
-            ("ture", False),  # the canonical typo
-            ("", False),
+            ("1", True, True),
+            ("0", True, False),  # recognised falsy overrides hook_enabled: true
+            ("TRUE", True, True),
+            (" yes ", True, True),
+            ("ture", False, True),  # typo -- defers to config, which is armed
+            ("", False, True),  # empty string -- same as a typo, defers to config
         ],
     )
-    def test_recognition_matches_config_env_flag(self, home, monkeypatch, env_value, recognised):
+    def test_recognition_matches_config_env_flag(
+        self, home, monkeypatch, env_value, recognised, armed
+    ):
+        """Assert the actual armed/unarmed outcome, not just the presence of
+        the word "unrecognised" -- a label-only assertion would pass
+        identically whether "0" correctly forces the hook off or is (wrongly)
+        ignored, leaving the "explicit falsy values force off" semantic from
+        the task's arming rules with no assertion that can fail on it."""
         write_config(home, {"hook_enabled": True})
         monkeypatch.setenv(cfgmod.HOOK_ENV_VAR, env_value)
         _, text = report_text()
+
+        if armed:
+            assert "ARMED via" in text
+            assert "NOT ARMED" not in text
+        else:
+            assert f"NOT ARMED ({cfgmod.HOOK_ENV_VAR}=" in text
 
         if recognised:
             assert "unrecognised" not in text
