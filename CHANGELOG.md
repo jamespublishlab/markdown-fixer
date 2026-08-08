@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **BREAKING:** `MARKDOWN_FIXER_EXCLUDE_PREFIXES`. Replaced by regex `exclude_patterns` in the config file and `MARKDOWN_FIXER_EXCLUDE_PATTERNS`. The old format was colon-separated, which cannot survive the move to regex because regexes contain colons
 - `integrations/claude-code/hooks/pre-markdown-fix.py` — superseded by the `hook` subcommand
+- `integrations/mcp-server/server.py` — its logic moved into `markdown_fixer.mcp_server` (see Changed)
+- `integrations/mcp-server/install.sh` — superseded by `./scripts/install-all.sh --cli` plus pointing Claude Desktop at the zipapp's `mcp-server` subcommand (`command: <abs path>/markdown-fixer`, `args: ["mcp-server"]`)
 
 ## [1.0.0] - 2025-12-27
 

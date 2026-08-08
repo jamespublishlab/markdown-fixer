@@ -46,8 +46,6 @@ markdown-fixer/
 │   │   └── README.md                # Installation guide
 │   │
 │   └── mcp-server/                   # Claude Desktop MCP server config/docs
-│       ├── install.sh                # Legacy installer, references a deleted
-│       │                             #   file — see README's Installation section
 │       ├── claude_desktop_config.json # Config template (absolute zipapp path)
 │       ├── config-templates/         # Per-platform config templates
 │       ├── requirements.txt          # Legacy pip-install helper
