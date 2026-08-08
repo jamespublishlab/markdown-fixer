@@ -140,12 +140,24 @@ def run_mcp_server(rest):
     return 0
 
 
+def run_doctor(rest):
+    """`markdown-fixer doctor` -- print resolved state."""
+    parser = argparse.ArgumentParser(prog="markdown-fixer doctor")
+    parser.parse_args(rest)
+
+    from .doctor import report
+
+    return report()
+
+
 def dispatch(name, rest):
     """Route a reserved first word to its subcommand. Returns an exit code."""
     if name == "hook":
         return run_hook(rest)
     if name == "mcp-server":
         return run_mcp_server(rest)
+    if name == "doctor":
+        return run_doctor(rest)
     raise AssertionError(f"unhandled reserved word: {name}")
 
 

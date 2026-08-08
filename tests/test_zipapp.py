@@ -116,3 +116,21 @@ class TestZipappMcpServer:
         assert frame["id"] == 1
         assert "result" in frame
         assert frame["result"]["serverInfo"]["name"] == "markdown-fixer"
+
+
+class TestZipappDoctor:
+    """The `doctor` subcommand's install-form detection (doctor._install_form)
+    can only be proven from the real built artifact: inside src/, __file__
+    always points at a real directory on disk, so an in-process test can never
+    exercise the zipapp branch and would report "package" unconditionally
+    regardless of whether the detection logic is correct.
+    """
+
+    def test_reports_zipapp_install_form(self, zipapp):
+        result = run_artifact(zipapp, ["doctor"])
+
+        assert result.returncode == 0, result.stderr
+        executable_line = next(
+            line for line in result.stdout.splitlines() if line.startswith("executable")
+        )
+        assert "zipapp" in executable_line

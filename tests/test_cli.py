@@ -189,3 +189,27 @@ class TestReservedWordDispatch:
 
         assert code == 2
         assert "markdown-fixer mcp-server" in err
+
+    def test_doctor_dispatches_instead_of_treating_it_as_a_file(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        """A file literally named 'doctor' must not shadow the subcommand."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "doctor").write_text("not markdown")
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+        monkeypatch.delenv("MARKDOWN_FIXER_HOOK", raising=False)
+
+        code = run_cli(["doctor"])
+        out = capsys.readouterr().out
+
+        assert code == 0
+        assert "NOT ARMED" in out
+
+    def test_doctor_rejects_unexpected_arguments(self, capsys):
+        """A bad flag after 'doctor' must be reported by its subparser."""
+        code = run_cli(["doctor", "--not-a-real-flag"])
+        err = capsys.readouterr().err
+
+        assert code == 2
+        assert "markdown-fixer doctor" in err
