@@ -72,6 +72,33 @@ class TestLoadConfig:
         write_config(home, {"exclude_patterns": ["^~/Daily/", 7, None]})
         assert cfgmod.load_config().raw_patterns == ["^~/Daily/"]
 
+    def test_null_exclude_patterns_is_malformed(self, home, capsys):
+        write_config(home, {"hook_enabled": True, "exclude_patterns": None})
+        cfg = cfgmod.load_config()
+        assert cfg.malformed is True
+        assert "must be a JSON array" in capsys.readouterr().err
+
+    def test_bare_string_exclude_patterns_is_malformed(self, home, capsys):
+        """A bare string would otherwise iterate character-by-character, and the
+        lone '^' would silently exclude every file."""
+        write_config(home, {"hook_enabled": True, "exclude_patterns": "^~/Daily/"})
+        cfg = cfgmod.load_config()
+        assert cfg.malformed is True
+        assert "must be a JSON array" in capsys.readouterr().err
+
+    def test_malformed_exclude_patterns_forces_unarmed(self, home):
+        """hook_enabled: true must not survive an unreadable exclusion set."""
+        write_config(home, {"hook_enabled": True, "exclude_patterns": 42})
+        assert cfgmod.is_armed(cfgmod.load_config()) is False
+
+    def test_warnings_never_reach_stdout(self, home, capsys):
+        """A later task speaks JSON-RPC over stdout; a stray print would corrupt it."""
+        write_config(home, "{not json")
+        cfgmod.compile_patterns(cfgmod.load_config())
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err != ""
+
 
 class TestIsArmed:
     def test_config_arms(self, home):
@@ -101,6 +128,15 @@ class TestIsArmed:
         assert cfgmod.is_armed(cfgmod.load_config()) is True
 
     def test_nothing_set_is_unarmed(self, home):
+        assert cfgmod.is_armed(cfgmod.load_config()) is False
+
+    def test_explicit_false_config_with_truthy_env_arms(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": False})
+        monkeypatch.setenv(cfgmod.HOOK_ENV_VAR, "1")
+        assert cfgmod.is_armed(cfgmod.load_config()) is True
+
+    def test_explicit_false_config_without_env_is_unarmed(self, home):
+        write_config(home, {"hook_enabled": False})
         assert cfgmod.is_armed(cfgmod.load_config()) is False
 
 

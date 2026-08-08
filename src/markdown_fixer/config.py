@@ -92,7 +92,15 @@ def load_config():
         print(f"markdown-fixer: config {path} is not a JSON object", file=sys.stderr)
         return Config(path=path, malformed=True)
 
-    raw_patterns = [p for p in data.get("exclude_patterns", []) if isinstance(p, str)]
+    exclude_patterns = data.get("exclude_patterns", [])
+    if not isinstance(exclude_patterns, list):
+        print(
+            f"markdown-fixer: config {path}: exclude_patterns must be a JSON array",
+            file=sys.stderr,
+        )
+        return Config(path=path, malformed=True)
+
+    raw_patterns = [p for p in exclude_patterns if isinstance(p, str)]
     return Config(
         path=path,
         hook_enabled=data.get("hook_enabled") is True,
