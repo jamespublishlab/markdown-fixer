@@ -84,19 +84,6 @@ if ! command -v python3 &> /dev/null; then
 fi
 echo -e "${GREEN}✓ Python 3 found${NC}"
 
-# Check for pipx (recommended) or pip
-if command -v pipx &> /dev/null; then
-    INSTALLER="pipx"
-    echo -e "${GREEN}✓ pipx found (recommended)${NC}"
-elif command -v pip3 &> /dev/null; then
-    INSTALLER="pip3"
-    echo -e "${YELLOW}⚠ Using pip3 (pipx recommended)${NC}"
-    echo "  Consider installing pipx: brew install pipx"
-else
-    echo -e "${RED}✗ Neither pipx nor pip found${NC}"
-    exit 1
-fi
-
 echo
 
 # Interactive mode
@@ -127,21 +114,47 @@ fi
 
 # 1. Install CLI tool
 if $INSTALL_CLI; then
-    echo -e "${BOLD}${BLUE}[1/3] Installing CLI tool...${NC}"
+    echo -e "${BOLD}${BLUE}[1/3] Installing CLI tool (zipapp)...${NC}"
 
-    if $INSTALLER install markdown-fixer; then
-        echo -e "${GREEN}✓ CLI installed successfully${NC}"
-        echo -e "  Command: ${BOLD}markdown-fixer${NC}"
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-        # Verify installation
-        if command -v markdown-fixer &> /dev/null; then
-            VERSION_OUTPUT=$(markdown-fixer --version 2>&1 || echo "version check failed")
-            echo -e "  ${VERSION_OUTPUT}"
-        fi
-    else
-        echo -e "${RED}✗ Failed to install CLI${NC}"
-        exit 1
-    fi
+    BIN_DIR="$HOME/.local/bin"
+    TARGET="$BIN_DIR/markdown-fixer"
+    ALIAS_PATH="$BIN_DIR/mdfixer"
+
+    mkdir -p "$BIN_DIR"
+    "$SCRIPT_DIR/build-zipapp.sh"
+
+    # rm -f is load-bearing, not hygiene: $TARGET may currently be a SYMLINK
+    # into an old pipx venv, and `cp` would follow that symlink and overwrite
+    # the venv's own binary -- leaving the symlink pointing at the new zipapp
+    # while the venv silently rots underneath it. That semi-works, which is
+    # worse than failing outright: it survives casual testing and breaks
+    # confusingly later.
+    rm -f "$TARGET" "$ALIAS_PATH"
+
+    cp "$PROJECT_ROOT/dist/markdown-fixer" "$TARGET"
+    chmod +x "$TARGET"
+    ln -s "$TARGET" "$ALIAS_PATH"
+
+    echo -e "${GREEN}✓ Installed $TARGET${NC}"
+    echo -e "  Command: ${BOLD}markdown-fixer${NC} (alias: ${BOLD}mdfixer${NC})"
+
+    VERSION_OUTPUT=$("$TARGET" --version 2>&1 || echo "version check failed")
+    echo -e "  ${VERSION_OUTPUT}"
+
+    case ":$PATH:" in
+        *":$BIN_DIR:"*)
+            echo -e "${GREEN}✓ $BIN_DIR is on PATH${NC}"
+            ;;
+        *)
+            echo -e "${YELLOW}⚠ $BIN_DIR is NOT on your PATH.${NC}"
+            echo -e "${YELLOW}  The Claude Code hook resolves markdown-fixer via PATH,${NC}"
+            echo -e "${YELLOW}  so it will silently do nothing until this is fixed.${NC}"
+            echo -e "${YELLOW}  Add to your shell profile:  export PATH=\"\$HOME/.local/bin:\$PATH\"${NC}"
+            ;;
+    esac
     echo
 fi
 
@@ -216,6 +229,7 @@ if $INSTALL_CLI; then
     echo -e "    markdown-fixer file.md -i           # Fix in-place"
     echo -e "    markdown-fixer *.md -i              # Fix multiple files"
     echo -e "    markdown-fixer --help               # Show all options"
+    echo -e "    (also available as: ${BOLD}mdfixer${NC})"
     echo
 fi
 
