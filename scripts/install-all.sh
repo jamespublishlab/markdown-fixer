@@ -18,7 +18,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-VERSION="1.0.0"
+VERSION="1.1.0"
 REPO="jamespublishlab/markdown-fixer"
 GITHUB_URL="https://github.com/$REPO"
 

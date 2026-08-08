@@ -17,10 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Self-contained zipapp build via `scripts/build-zipapp.sh` — no venv required at runtime
 
 ### Changed
-- **The CLI has no third-party runtime dependencies.** `click` replaced with `argparse`
+- **`click` replaced with `argparse`.** The zipapp is stdlib-only and needs no third-party packages at runtime; `wcwidth` remains a dependency of the pip-installed package, where it provides accurate width calculation for wide and CJK characters in tables (`core.py` falls back gracefully when it is absent, which is how the zipapp works without it)
 - The Claude Code hook is now installed as a subcommand, so its settings.json entry contains no absolute paths and is identical on every machine
 - The MCP server moved from `integrations/mcp-server/server.py` into `markdown_fixer.mcp_server`, removing a `sys.path` manipulation
 - The hook is now **opt-in**: unset means off. It must be armed per machine via config or env var
+- **Installation for POSIX systems (macOS, Linux):** The new `install-all.sh` builds a self-contained zipapp and copies it to `~/.local/bin/markdown-fixer`, creating a `mdfixer` symlink alongside. Existing pipx-based installs are automatically cleaned up. Windows users continue to use `pip install`
+
+### Fixed
+- **MCP server stability:** JSON-RPC frames that are not dictionaries (e.g. bare `123`) no longer crash the stdin read loop and drop queued requests; the server now returns JSON-RPC error `-32600` (Invalid Request)
 
 ### Removed
 - **BREAKING:** `MARKDOWN_FIXER_EXCLUDE_PREFIXES`. Replaced by regex `exclude_patterns` in the config file and `MARKDOWN_FIXER_EXCLUDE_PATTERNS`. The old format was colon-separated, which cannot survive the move to regex because regexes contain colons
@@ -61,4 +65,5 @@ Initial release of markdown-fixer.
 - Integration guides for each platform
 - Developer documentation and contribution guidelines
 
+[1.1.0]: https://github.com/jamespublishlab/markdown-fixer/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jamespublishlab/markdown-fixer/releases/tag/v1.0.0
