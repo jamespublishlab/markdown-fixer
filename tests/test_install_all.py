@@ -33,15 +33,18 @@ pytestmark = pytest.mark.skipif(
 def run_installer(home, extra_path_dirs=()):
     """Run `install-all.sh --cli` against a throwaway HOME.
 
-    Unlike test_zipapp.py's minimal env dict, TERM must survive: the script
-    calls `clear` near the top under `set -e`, and a stripped TERM makes
-    `clear` fail there, aborting the script before the CLI block ever runs.
-    Starting from a copy of os.environ keeps TERM (and other ambient
-    settings) intact while HOME and PATH are pinned explicitly.
+    Unlike test_zipapp.py's minimal env dict, TERM must be set: the script
+    calls `clear` near the top under `set -e`, and a missing/unusable TERM
+    makes `clear` fail there, aborting the script before the CLI block ever
+    runs. Starting from a copy of os.environ preserves ambient settings, but
+    TERM is pinned explicitly with a fallback because CI runners (this repo's
+    GitHub Actions matrix included) commonly run pytest with no TERM set at
+    all -- os.environ alone is not enough there.
     """
     env = dict(os.environ)
     env["HOME"] = str(home)
     env["PYTHONNOUSERSITE"] = "1"
+    env["TERM"] = os.environ.get("TERM") or "xterm"
     env["PATH"] = ":".join([*extra_path_dirs, "/usr/bin", "/bin", "/usr/local/bin"])
     return subprocess.run(
         ["bash", str(INSTALL_SCRIPT), "--cli"],

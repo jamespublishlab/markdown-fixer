@@ -141,7 +141,11 @@ if $INSTALL_CLI; then
     echo -e "${GREEN}✓ Installed $TARGET${NC}"
     echo -e "  Command: ${BOLD}markdown-fixer${NC} (alias: ${BOLD}mdfixer${NC})"
 
-    VERSION_OUTPUT=$("$TARGET" --version 2>&1 || echo "version check failed")
+    if ! VERSION_OUTPUT=$("$TARGET" --version 2>&1); then
+        echo -e "${RED}✗ Installed binary failed to run:${NC}"
+        echo -e "  ${VERSION_OUTPUT}"
+        exit 1
+    fi
     echo -e "  ${VERSION_OUTPUT}"
 
     case ":$PATH:" in
