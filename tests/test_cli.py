@@ -1,5 +1,7 @@
 """Tests for CLI functionality."""
 
+import io
+
 import pytest
 
 from markdown_fixer.__version__ import __version__
@@ -168,3 +170,22 @@ class TestReservedWordDispatch:
 
         assert code == 2
         assert "markdown-fixer hook" in err
+
+    def test_mcp_server_dispatches_instead_of_treating_it_as_a_file(self, tmp_path, monkeypatch):
+        """A file literally named 'mcp-server' must not shadow the subcommand."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "mcp-server").write_text("not markdown")
+        # Empty stdin: the server's read loop hits EOF immediately and
+        # returns, so this stays fast and deterministic under pytest.
+        monkeypatch.setattr("sys.stdin", io.StringIO(""))
+
+        code = run_cli(["mcp-server"])
+        assert code == 0
+
+    def test_mcp_server_rejects_unexpected_arguments(self, capsys):
+        """A bad flag after 'mcp-server' must be reported by its subparser."""
+        code = run_cli(["mcp-server", "--not-a-real-flag"])
+        err = capsys.readouterr().err
+
+        assert code == 2
+        assert "markdown-fixer mcp-server" in err

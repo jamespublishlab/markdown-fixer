@@ -13,6 +13,7 @@ the same interpreter Claude Desktop uses, which also enforces the 3.8/3.9
 syntax floor.
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -46,7 +47,7 @@ def zipapp(tmp_path_factory):
     return artifact
 
 
-def run_artifact(artifact, args):
+def run_artifact(artifact, args, input=None):
     """Run the built zipapp with no user site-packages and a minimal PATH."""
     env = {
         "PATH": "/usr/bin:/bin",
@@ -55,10 +56,12 @@ def run_artifact(artifact, args):
     }
     return subprocess.run(
         [str(artifact)] + list(args),
+        input=input,
         env=env,
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
 
 
@@ -89,3 +92,27 @@ class TestZipappSmoke:
         main() must call sys.exit() itself or failures report success."""
         result = run_artifact(zipapp, [str(tmp_path / "missing.md")])
         assert result.returncode == 1
+
+
+class TestZipappMcpServer:
+    """The `mcp-server` subcommand must work from the built artifact.
+
+    Before Task 6, mcp_server.py's sys.path hack reached OUTSIDE the package
+    for its implementation -- a path that does not exist inside a zip. Making
+    this reachable from the zipapp is the entire point of the move.
+    """
+
+    def test_mcp_server_answers_initialize(self, zipapp):
+        request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
+
+        result = run_artifact(zipapp, ["mcp-server"], input=request + "\n")
+
+        assert result.returncode == 0, result.stderr
+        lines = [line for line in result.stdout.splitlines() if line.strip()]
+        assert lines, f"no protocol output; stderr was: {result.stderr}"
+
+        frame = json.loads(lines[0])  # raises if anything non-JSON reached stdout
+        assert frame["jsonrpc"] == "2.0"
+        assert frame["id"] == 1
+        assert "result" in frame
+        assert frame["result"]["serverInfo"]["name"] == "markdown-fixer"

@@ -65,3 +65,12 @@ target-version = ['py38']
 [tool.ruff]
 line-length = 100
 target-version = "py38"
+
+[tool.ruff.lint.per-file-ignores]
+# mcp_server.py moved in from integrations/mcp-server/ (Task 6 of the
+# zipapp-packaging plan), which ruff never linted. These are pre-existing
+# style debt in code carried over verbatim, not introduced by the move; fixing
+# them is out of scope for a change whose entire point is "behaviour
+# preserved, proven by the existing tests passing unedited." Revisit in a
+# dedicated cleanup pass.
+"src/markdown_fixer/mcp_server.py" = ["I001", "FA100", "G201", "RUF010"]

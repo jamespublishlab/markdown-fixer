@@ -129,10 +129,23 @@ def run_hook(rest):
     return run()
 
 
+def run_mcp_server(rest):
+    """`markdown-fixer mcp-server` -- JSON-RPC over stdio for Claude Desktop."""
+    parser = argparse.ArgumentParser(prog="markdown-fixer mcp-server")
+    parser.parse_args(rest)
+
+    from .mcp_server import main as server_main
+
+    server_main()
+    return 0
+
+
 def dispatch(name, rest):
     """Route a reserved first word to its subcommand. Returns an exit code."""
     if name == "hook":
         return run_hook(rest)
+    if name == "mcp-server":
+        return run_mcp_server(rest)
     raise AssertionError(f"unhandled reserved word: {name}")
 
 
