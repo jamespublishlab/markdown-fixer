@@ -30,8 +30,17 @@ class MarkdownFixerMCPServer:
         self.fixer = MarkdownFixer()
         self.server_info = {"name": "markdown-fixer", "version": __version__}
 
-    def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def handle_request(self, request: Any) -> Dict[str, Any]:
         """Handle incoming MCP request."""
+        if not isinstance(request, dict):
+            # Valid JSON but not a JSON-RPC request object (e.g. a bare
+            # number, string, or list). We cannot recover an id from it, so
+            # respond per JSON-RPC 2.0's convention for an unparseable
+            # request rather than letting a malformed frame from a buggy
+            # client crash the whole read loop.
+            logger.error(f"Received non-object request: {request!r}")
+            return self._error_response(None, -32600, "Invalid Request")
+
         method = request.get("method")
         params = request.get("params", {})
         request_id = request.get("id")
