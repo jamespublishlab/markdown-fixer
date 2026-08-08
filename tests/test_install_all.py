@@ -25,8 +25,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 INSTALL_SCRIPT = REPO_ROOT / "scripts" / "install-all.sh"
 
 pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="the zipapp install path is POSIX-only; Windows uses pip install",
+    sys.platform != "darwin",
+    reason=(
+        "install-all.sh itself is macOS-only (it checks $OSTYPE and exits 1 with "
+        "pip-install guidance on any other platform), which is narrower than the "
+        "zipapp's own POSIX-only constraint -- unlike test_zipapp.py, skipping only "
+        "win32 here would still fail on Linux CI runners."
+    ),
 )
 
 
