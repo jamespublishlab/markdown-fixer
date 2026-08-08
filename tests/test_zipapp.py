@@ -15,12 +15,18 @@ syntax floor.
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 BUILD_SCRIPT = REPO_ROOT / "scripts" / "build-zipapp.sh"
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="the zipapp install path is POSIX-only; Windows uses pip install",
+)
 
 
 @pytest.fixture(scope="module")
@@ -31,6 +37,7 @@ def zipapp(tmp_path_factory):
         ["bash", str(BUILD_SCRIPT), str(out_dir)],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 0, f"build failed: {result.stderr}"
 
@@ -51,6 +58,7 @@ def run_artifact(artifact, args):
         env=env,
         capture_output=True,
         text=True,
+        check=False,
     )
 
 
