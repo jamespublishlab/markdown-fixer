@@ -28,9 +28,11 @@ venv):
 ```bash
 git clone https://github.com/jamespublishlab/markdown-fixer
 cd markdown-fixer
-./scripts/build-zipapp.sh          # -> dist/markdown-fixer
+./scripts/build-zipapp.sh                                # -> dist/markdown-fixer
+mkdir -p ~/.local/bin
 cp dist/markdown-fixer ~/.local/bin/markdown-fixer
 chmod +x ~/.local/bin/markdown-fixer
+ln -sf ~/.local/bin/markdown-fixer ~/.local/bin/mdfixer   # optional short alias
 ```
 
 ### Windows, or pip on any platform

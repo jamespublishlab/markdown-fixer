@@ -485,7 +485,7 @@ A: No. Everything runs locally on your machine.
 
 - [Main Project Documentation](../../README.md)
 - [Claude Code Integration](../claude-code/README.md)
-- [Other Integrations](../README.md)
+- [Other Integrations](../../docs/integrations.md)
 
 ## License
 

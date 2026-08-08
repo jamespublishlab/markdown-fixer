@@ -112,9 +112,9 @@ Claude: [Uses markdown-fixer tool]
    pip install git+https://github.com/jamespublishlab/markdown-fixer.git
    ```
 
-3. **Paste** it into the Terminal window (right-click → Paste, or Cmd+V / Ctrl+V)
+3. **Paste** what you copied into the Terminal window (right-click → Paste, or Cmd+V / Ctrl+V). The Mac version is a few lines — that's fine, paste all of them at once.
 
-4. Press **Enter**
+4. Press **Enter** if the commands don't already start running on their own after pasting (some terminals run a pasted block automatically, line by line)
 
 5. Wait for it to finish (you'll see lots of text scroll by - this is normal, usually takes 10-30 seconds)
 
