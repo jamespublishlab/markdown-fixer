@@ -56,8 +56,17 @@ The hook is **opt-in**. It does nothing until armed on that machine, either by
 or by setting `MARKDOWN_FIXER_HOOK=1` in the environment that runs Claude
 Code. Setting `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config
 file. A malformed config file forces it unarmed as well, even against a
-truthy env var — an unreadable config means the exclusion set is unknown, and
-running with silently-empty exclusions is the wrong direction to fail in.
+truthy env var — a config whose exclusion set cannot be read in full leaves
+its intent unknown, and running with silently fewer exclusions than you asked
+for is the wrong direction to fail in. That covers a file that is not valid
+JSON, an `exclude_patterns` that is not a JSON array, and a **non-string entry
+inside** that array (a nested list is the usual typo). Each case names the
+problem on stderr; `markdown-fixer doctor` reports
+`NOT ARMED (config unusable -- fail closed)`.
+
+`MARKDOWN_FIXER_EXCLUDE_PATTERNS` is deliberately gentler: because it only
+*adds* patterns, a bad entry there cannot shrink what the config already
+protects, so it is reported on stderr and skipped without disarming the hook.
 
 **Write which path form your patterns need to match.** `Write` and `Edit`
 supply an **absolute** path (e.g.

@@ -16,6 +16,7 @@ from pathlib import Path
 
 from .__version__ import __version__
 from .config import (
+    CONFIG_HOME_ENV_VAR,
     HOOK_ENV_VAR,
     PATTERNS_ENV_VAR,
     _env_flag,
@@ -54,7 +55,10 @@ def arming_source(cfg):
       implying the env var contributed, or blaming it for being off.
     """
     if cfg.malformed:
-        return "NOT ARMED (config unreadable -- fail closed)"
+        # "unusable", not "unreadable": a config that parses fine but carries a
+        # non-string exclude_patterns entry is malformed too, and load_config()
+        # has already named the offending entry on stderr.
+        return "NOT ARMED (config unusable -- fail closed)"
 
     env_raw = os.environ.get(HOOK_ENV_VAR)
     armed = is_armed(cfg)
@@ -102,7 +106,10 @@ def report(stdout=None):
     lines.append("")
     lines.append("note         doctor sees THIS shell's PATH. Hooks and MCP servers inherit")
     lines.append(f"             their parent process's environment instead. {HOOK_ENV_VAR},")
-    lines.append(f"             {PATTERNS_ENV_VAR}, and PATH may all differ there.")
+    lines.append(f"             {PATTERNS_ENV_VAR}, PATH, and {CONFIG_HOME_ENV_VAR} may all")
+    lines.append(f"             differ there -- and {CONFIG_HOME_ENV_VAR} decides which config")
+    lines.append("             file is read, so a hook can be reading a different config")
+    lines.append("             than the one reported above.")
 
     stdout.write("\n".join(lines) + "\n")
     return 0

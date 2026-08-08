@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **MCP server stability:** JSON-RPC frames that are not dictionaries (e.g. bare `123`) no longer crash the stdin read loop and drop queued requests; the server now returns JSON-RPC error `-32600` (Invalid Request)
+- **A non-string entry inside `exclude_patterns` now fails closed** instead of being dropped silently. `{"hook_enabled": true, "exclude_patterns": [["(^|/)Daily/"]]}` — a nested list, the usual typo — previously produced an *armed* hook with zero exclusions and no warning, so every file it saw was rewritten including the ones the config was written to protect. It now marks the config malformed (hook unarmed), and the warning names the offending index. `MARKDOWN_FIXER_EXCLUDE_PATTERNS` keeps the gentler behaviour — a bad entry is warned about and skipped without disarming, since env patterns only add to the config's and cannot shrink them
+- **`markdown-fixer doctor` now names `XDG_CONFIG_HOME`** in its environment-drift note. It decides which config file is read at all, so a hook whose environment differs there is reading a *different config* than the one doctor reported on — previously the note listed only `MARKDOWN_FIXER_HOOK`, `MARKDOWN_FIXER_EXCLUDE_PATTERNS`, and `PATH`
 
 ### Removed
 - **BREAKING:** `MARKDOWN_FIXER_EXCLUDE_PREFIXES`. Replaced by regex `exclude_patterns` in the config file and `MARKDOWN_FIXER_EXCLUDE_PATTERNS`. The old format was colon-separated, which cannot survive the move to regex because regexes contain colons.

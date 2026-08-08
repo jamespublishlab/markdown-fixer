@@ -83,6 +83,31 @@ class TestDoctor:
         _, text = report_text()
         assert "(none)" in text
 
+    def test_note_names_the_config_home_variable(self, home):
+        """XDG_CONFIG_HOME decides which config file exists at all, so a hook
+        whose environment differs there reads a *different config* than the one
+        doctor just reported on -- the sharpest form of the drift this note
+        exists to warn about, and the one it omitted.
+
+        Assert inside the note block rather than against the whole report:
+        doctor prints the resolved `config <path>` line unconditionally, so a
+        bare `"XDG_CONFIG_HOME" in text` would be satisfiable by a path that
+        merely happens to contain the string.
+        """
+        _, text = report_text()
+        note = text.split("\nnote ", 1)[1]
+        assert cfgmod.CONFIG_HOME_ENV_VAR in note
+
+    def test_non_string_pattern_entry_is_not_armed(self, home):
+        """A nested list inside exclude_patterns must read as unusable here,
+        not as an armed hook with zero exclusions."""
+        write_config(home, {"hook_enabled": True, "exclude_patterns": [["(^|/)Daily/"]]})
+        code, text = report_text()
+
+        assert code == 0
+        assert "NOT ARMED" in text
+        assert "ARMED via" not in text
+
 
 class TestMalformedConfig:
     """report() must never raise, and must fail closed, on an unreadable
@@ -94,7 +119,7 @@ class TestMalformedConfig:
         code, text = report_text()
         assert code == 0
         assert "NOT ARMED" in text
-        assert "unreadable" in text
+        assert "unusable" in text
 
     def test_malformed_config_beats_truthy_env(self, home, monkeypatch):
         """A malformed config forces unarmed even against MARKDOWN_FIXER_HOOK=1 --

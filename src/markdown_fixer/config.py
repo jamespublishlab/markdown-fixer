@@ -19,6 +19,17 @@ vault root instead (e.g. "Daily/x.md", not "/Users/you/.../Daily/x.md"). A
 pattern anchored with "^~/..." matches only the absolute form. is_excluded()
 matches unanchored (re.search), so an anchor-free pattern like the one above
 matches both.
+
+The config fails closed. An unparseable file, an exclude_patterns that is not
+a JSON array, and a non-string *entry* inside that array all mark the config
+malformed, which forces the hook unarmed even against a truthy env var: a
+config whose exclusion set cannot be read in full is a config whose intent is
+unknown, and running the fixer with silently fewer exclusions than were asked
+for is the data-loss direction.
+
+PATTERNS_ENV_VAR is the deliberate exception. It only ADDS patterns, so a bad
+value there cannot shrink what the config already protects -- a bad entry is
+warned about and skipped, never disarming.
 """
 
 import json
@@ -32,6 +43,9 @@ from typing import Pattern as RePattern
 
 HOOK_ENV_VAR = "MARKDOWN_FIXER_HOOK"
 PATTERNS_ENV_VAR = "MARKDOWN_FIXER_EXCLUDE_PATTERNS"
+# Not ours, but it decides which config file exists at all, so it belongs in
+# any report about where the config came from.
+CONFIG_HOME_ENV_VAR = "XDG_CONFIG_HOME"
 
 TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES = frozenset({"0", "false", "no", "off"})
@@ -63,7 +77,7 @@ class Config:
 
 def config_path():
     """Return the config file path. The file may not exist."""
-    xdg = os.environ.get("XDG_CONFIG_HOME")
+    xdg = os.environ.get(CONFIG_HOME_ENV_VAR)
     base = Path(xdg) if xdg else Path.home() / ".config"
     return base / "markdown-fixer" / "config.json"
 
@@ -107,11 +121,22 @@ def load_config():
         )
         return Config(path=path, malformed=True)
 
-    raw_patterns = [p for p in exclude_patterns if isinstance(p, str)]
+    for index, pattern in enumerate(exclude_patterns):
+        if not isinstance(pattern, str):
+            # Fail closed like a non-array exclude_patterns does: dropping the
+            # entry would leave the hook armed with fewer exclusions than the
+            # config asks for. Name the index so the entry can be found.
+            print(
+                f"markdown-fixer: config {path}: exclude_patterns[{index}] is "
+                f"{type(pattern).__name__}, not a string",
+                file=sys.stderr,
+            )
+            return Config(path=path, malformed=True)
+
     return Config(
         path=path,
         hook_enabled=data.get("hook_enabled") is True,
-        raw_patterns=raw_patterns,
+        raw_patterns=list(exclude_patterns),
     )
 
 
@@ -166,7 +191,22 @@ def _env_patterns():
         print(f"markdown-fixer: {PATTERNS_ENV_VAR} must be a JSON array", file=sys.stderr)
         return []
 
-    return [p for p in data if isinstance(p, str)]
+    # Unlike the config file, a bad entry here warns and is skipped rather than
+    # disarming: env patterns only ADD to the config's, so one cannot shrink
+    # the protection the config already provides. Disarming over a single bad
+    # entry would also punish it harder than a wholly unparseable value, which
+    # is already only warned about.
+    patterns = []
+    for index, pattern in enumerate(data):
+        if not isinstance(pattern, str):
+            print(
+                f"markdown-fixer: {PATTERNS_ENV_VAR}[{index}] is "
+                f"{type(pattern).__name__}, not a string; ignoring it",
+                file=sys.stderr,
+            )
+            continue
+        patterns.append(pattern)
+    return patterns
 
 
 def _compile_one(raw, source):

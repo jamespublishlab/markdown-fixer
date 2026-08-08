@@ -68,9 +68,25 @@ class TestLoadConfig:
         write_config(home, {"hook_enabled": True, "nonsense": 42})
         assert cfgmod.load_config().hook_enabled is True
 
-    def test_non_string_patterns_are_dropped(self, home):
-        write_config(home, {"exclude_patterns": ["^~/Daily/", 7, None]})
-        assert cfgmod.load_config().raw_patterns == ["^~/Daily/"]
+    @pytest.mark.parametrize("bad", [7, None, ["(^|/)Daily/"]])
+    def test_non_string_pattern_entry_is_malformed(self, home, capsys, bad):
+        """A non-string *entry* fails closed, exactly as a non-array
+        exclude_patterns does.
+
+        Dropping it silently -- the previous behaviour -- left the hook ARMED
+        with fewer exclusions than the config asks for, which is the
+        armed-with-unknown-exclusions outcome the fail-closed rule exists to
+        prevent. A nested list is the likely typo, and was the reported case.
+        The warning names the index so the offending entry is findable.
+        """
+        write_config(home, {"hook_enabled": True, "exclude_patterns": ["^~/Daily/", bad]})
+        cfg = cfgmod.load_config()
+        captured = capsys.readouterr()
+
+        assert cfg.malformed is True
+        assert cfgmod.is_armed(cfg) is False
+        assert "exclude_patterns[1]" in captured.err
+        assert captured.out == ""
 
     def test_null_exclude_patterns_is_malformed(self, home, capsys):
         write_config(home, {"hook_enabled": True, "exclude_patterns": None})
@@ -189,3 +205,20 @@ class TestExclusion:
 
         assert patterns == []
         assert "not valid JSON" in capsys.readouterr().err
+
+    def test_non_string_env_pattern_entry_is_warned_and_skipped(self, home, monkeypatch, capsys):
+        """The env var ADDS to config, and a wholly unparseable one is already
+        warned-and-ignored without disarming (see the test above). Disarming
+        over one bad *entry* would therefore punish a smaller mistake harder
+        than a bigger one. Warn, skip the entry, keep the rest -- and the
+        config's own patterns must survive untouched."""
+        write_config(home, {"hook_enabled": True, "exclude_patterns": ["^~/Daily/"]})
+        monkeypatch.setenv(cfgmod.PATTERNS_ENV_VAR, json.dumps(["/vendor/", 7]))
+        cfg = cfgmod.load_config()
+        patterns = cfgmod.compile_patterns(cfg)
+        captured = capsys.readouterr()
+
+        assert cfgmod.is_armed(cfg) is True
+        assert [p.raw for p in patterns] == ["^~/Daily/", "/vendor/"]
+        assert f"{cfgmod.PATTERNS_ENV_VAR}[1]" in captured.err
+        assert captured.out == ""
