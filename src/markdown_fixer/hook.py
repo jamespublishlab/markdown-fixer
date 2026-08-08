@@ -37,7 +37,7 @@ def run(stdin=None, stdout=None):
 
     # Write/Edit use file_path; the Obsidian MCP tools use filename.
     filename = tool_input.get("file_path") or tool_input.get("filename") or ""
-    if not filename:
+    if not filename or not isinstance(filename, str):
         return 0
 
     # Gate strictly on the extension. Inferring markdown from content

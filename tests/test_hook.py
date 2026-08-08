@@ -110,6 +110,15 @@ class TestGates:
         assert code == 0
         assert out == ""
 
+    @pytest.mark.parametrize("bad_value", [123, ["a.md"], {"p": "a.md"}, True])
+    def test_non_string_filename_exits_zero(self, home, bad_value):
+        """A malformed payload must never raise out of the hook."""
+        write_config(home, {"hook_enabled": True})
+        raw = json.dumps({"tool_input": {"file_path": bad_value, "content": DIRTY}})
+        code, out = run_hook(raw)
+        assert code == 0
+        assert out == ""
+
 
 class TestExclusions:
     def test_excluded_by_raw_path(self, home):
