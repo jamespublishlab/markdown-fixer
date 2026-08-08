@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-08
+
+### Added
+- `markdown-fixer hook claude-code` — the Claude Code PreToolUse hook, now part of the package
+- `markdown-fixer mcp-server` — the MCP server, now part of the package
+- `markdown-fixer doctor` — reports resolved arming state, config file, and exclusion patterns
+- Machine-local config at `$XDG_CONFIG_HOME/markdown-fixer/config.json` (falling back to `~/.config/markdown-fixer/config.json`) with `hook_enabled` and regex `exclude_patterns`
+- `MARKDOWN_FIXER_HOOK` env var to arm or force-disable the hook
+- `MARKDOWN_FIXER_EXCLUDE_PATTERNS` env var (JSON array) adding to the config's patterns
+- Self-contained zipapp build via `scripts/build-zipapp.sh` — no venv required at runtime
+
+### Changed
+- **The CLI has no third-party runtime dependencies.** `click` replaced with `argparse`
+- The Claude Code hook is now installed as a subcommand, so its settings.json entry contains no absolute paths and is identical on every machine
+- The MCP server moved from `integrations/mcp-server/server.py` into `markdown_fixer.mcp_server`, removing a `sys.path` manipulation
+- The hook is now **opt-in**: unset means off. It must be armed per machine via config or env var
+
+### Removed
+- **BREAKING:** `MARKDOWN_FIXER_EXCLUDE_PREFIXES`. Replaced by regex `exclude_patterns` in the config file and `MARKDOWN_FIXER_EXCLUDE_PATTERNS`. The old format was colon-separated, which cannot survive the move to regex because regexes contain colons
+- `integrations/claude-code/hooks/pre-markdown-fix.py` — superseded by the `hook` subcommand
+
 ## [1.0.0] - 2025-12-27
 
 Initial release of markdown-fixer.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "markdown-fixer"
-version = "1.0.0"
+version = "1.1.0"
 description = "Fix common markdown formatting issues in LLM-generated content"
 authors = [{name = "James", email = "james@publishlab.com"}]
 readme = "README.md"
