@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""
+Machine-local configuration for markdown-fixer.
+
+Config lives at $XDG_CONFIG_HOME/markdown-fixer/config.json, falling back to
+~/.config/markdown-fixer/config.json.
+
+    {
+      "hook_enabled": true,
+      "exclude_patterns": ["^~/Documents/SecondBrain/(Daily|Weekly)/"]
+    }
+
+The config file — not settings.json — is the durable arming signal, so the
+Claude Code hook line can stay byte-identical on every machine.
+"""
+
+import json
+import os
+import re
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import List, Optional
+from typing import Pattern as RePattern
+
+HOOK_ENV_VAR = "MARKDOWN_FIXER_HOOK"
+PATTERNS_ENV_VAR = "MARKDOWN_FIXER_EXCLUDE_PATTERNS"
+
+TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
+FALSE_VALUES = frozenset({"0", "false", "no", "off"})
+
+
+@dataclass
+class Pattern:
+    """One exclusion pattern, with where it came from and whether it compiled."""
+
+    raw: str
+    source: str  # "config" or "env"
+    regex: Optional[RePattern] = None
+    error: Optional[str] = None
+
+    @property
+    def valid(self):
+        return self.regex is not None
+
+
+@dataclass
+class Config:
+    """Parsed config state. `malformed` means the file existed but was unusable."""
+
+    path: Optional[Path] = None
+    hook_enabled: bool = False
+    raw_patterns: List[str] = field(default_factory=list)
+    malformed: bool = False
+
+
+def config_path():
+    """Return the config file path. The file may not exist."""
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    base = Path(xdg) if xdg else Path.home() / ".config"
+    return base / "markdown-fixer" / "config.json"
+
+
+def collapse_home(path):
+    """Rewrite a leading home directory to '~'.
+
+    Returns the path unchanged when it does not start with the home directory,
+    so callers can match against both forms unconditionally.
+    """
+    home = str(Path.home())
+    if path == home:
+        return "~"
+    if path.startswith(home + os.sep):
+        return "~" + path[len(home) :]
+    return path
+
+
+def load_config():
+    """Read and parse the config file. Never raises."""
+    path = config_path()
+
+    if not path.exists():
+        return Config()
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"markdown-fixer: cannot read config {path}: {exc}", file=sys.stderr)
+        return Config(path=path, malformed=True)
+
+    if not isinstance(data, dict):
+        print(f"markdown-fixer: config {path} is not a JSON object", file=sys.stderr)
+        return Config(path=path, malformed=True)
+
+    raw_patterns = [p for p in data.get("exclude_patterns", []) if isinstance(p, str)]
+    return Config(
+        path=path,
+        hook_enabled=data.get("hook_enabled") is True,
+        raw_patterns=raw_patterns,
+    )
+
+
+def _env_flag(name):
+    """True/False for an explicitly recognised value, None otherwise.
+
+    None covers unset, empty, and typos. A typo must not force the hook off --
+    it simply fails to arm, deferring to the config file.
+    """
+    raw = os.environ.get(name)
+    if raw is None:
+        return None
+    value = raw.strip().lower()
+    if value in TRUE_VALUES:
+        return True
+    if value in FALSE_VALUES:
+        return False
+    return None
+
+
+def is_armed(cfg):
+    """Decide whether the hook should run.
+
+    A malformed config forces unarmed even against a truthy env var: an
+    unreadable config means the exclusion set is unknown, and running with
+    silently-empty exclusions is the data-risk direction.
+    """
+    if cfg.malformed:
+        return False
+
+    flag = _env_flag(HOOK_ENV_VAR)
+    if flag is False:
+        return False
+    if flag is True:
+        return True
+    return cfg.hook_enabled
+
+
+def _env_patterns():
+    """Parse PATTERNS_ENV_VAR as a JSON array of strings. Never raises."""
+    raw = os.environ.get(PATTERNS_ENV_VAR)
+    if not raw:
+        return []
+
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        print(f"markdown-fixer: {PATTERNS_ENV_VAR} is not valid JSON: {exc}", file=sys.stderr)
+        return []
+
+    if not isinstance(data, list):
+        print(f"markdown-fixer: {PATTERNS_ENV_VAR} must be a JSON array", file=sys.stderr)
+        return []
+
+    return [p for p in data if isinstance(p, str)]
+
+
+def _compile_one(raw, source):
+    try:
+        return Pattern(raw=raw, source=source, regex=re.compile(raw))
+    except re.error as exc:
+        print(
+            f"markdown-fixer: ignoring invalid exclude pattern {raw!r}: {exc}",
+            file=sys.stderr,
+        )
+        return Pattern(raw=raw, source=source, error=str(exc))
+
+
+def compile_patterns(cfg):
+    """Compile config patterns then env patterns. Env patterns ADD to config."""
+    patterns = [_compile_one(raw, "config") for raw in cfg.raw_patterns]
+    patterns.extend(_compile_one(raw, "env") for raw in _env_patterns())
+    return patterns
+
+
+def is_excluded(filepath, patterns):
+    """True when filepath matches any valid pattern.
+
+    Every pattern is tested against both the raw path and its home-collapsed
+    form, so a config written either way works on any machine. When the path is
+    not under home the two forms are identical and the pattern is simply tested
+    twice.
+    """
+    candidates = {filepath, collapse_home(filepath)}
+    for pattern in patterns:
+        if not pattern.valid:
+            continue
+        for candidate in candidates:
+            if pattern.regex.search(candidate):
+                return True
+    return False
