@@ -145,3 +145,26 @@ class TestReservedWordDispatch:
         from markdown_fixer.cli import RESERVED
 
         assert RESERVED == frozenset({"hook", "mcp-server", "doctor"})
+
+    def test_relative_path_escapes_reserved_word(self, tmp_path, monkeypatch, capsys):
+        """./hook must reach file-fixing mode even though 'hook' is reserved."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "hook").write_text("# Header\n- List item\nText")
+
+        code = run_cli(["./hook", "--dry-run"])
+        out = capsys.readouterr().out
+
+        assert code == 0
+        assert "- List item" in out
+
+    def test_reserved_word_is_checked_before_argument_parsing(self, capsys):
+        """A bad flag after 'hook' must be reported by the hook subparser.
+
+        If the RESERVED check ever moved after parser.parse_args(), the main
+        parser would report this instead and the usage line would change.
+        """
+        code = run_cli(["hook", "claude-code", "--not-a-real-flag"])
+        err = capsys.readouterr().err
+
+        assert code == 2
+        assert "markdown-fixer hook" in err
