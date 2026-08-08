@@ -1,10 +1,18 @@
 """Tests for machine-local configuration."""
 
 import json
+import os
+import sys
 
 import pytest
 
 from markdown_fixer import config as cfgmod
+
+# chmod does not gate reads for root, and does not gate them at all on Windows.
+needs_enforced_permissions = pytest.mark.skipif(
+    sys.platform == "win32" or os.geteuid() == 0,
+    reason="directory permissions are not enforced for root or on Windows",
+)
 
 
 @pytest.fixture
@@ -106,6 +114,32 @@ class TestLoadConfig:
         """hook_enabled: true must not survive an unreadable exclusion set."""
         write_config(home, {"hook_enabled": True, "exclude_patterns": 42})
         assert cfgmod.is_armed(cfgmod.load_config()) is False
+
+    @needs_enforced_permissions
+    def test_unreadable_config_dir_is_malformed_and_does_not_raise(self, home, capsys):
+        """An EACCES on the config path must fail closed, not escape.
+
+        load_config() is contractually "never raises", and hook.run() calls it
+        outside any try. The guard that used to sit above the try was
+        `path.exists()`, which only swallows ENOENT/ENOTDIR/EBADF/ELOOP -- so
+        EACCES propagated, and did so only on Python <= 3.12 (3.13 broadened
+        exists() to catch every OSError). That made the escape invisible on a
+        modern dev interpreter while it still bit /usr/bin/python3 3.9.6, the
+        floor this project ships against. Reading the file directly raises on
+        every version, so this assertion is version-independent.
+        """
+        path = write_config(home, {"hook_enabled": True})
+        path.parent.chmod(0o000)
+        try:
+            cfg = cfgmod.load_config()
+        finally:
+            path.parent.chmod(0o755)
+        captured = capsys.readouterr()
+
+        assert cfg.malformed is True
+        assert cfgmod.is_armed(cfg) is False
+        assert "cannot read config" in captured.err
+        assert captured.out == ""
 
     def test_warnings_never_reach_stdout(self, home, capsys):
         """A later task speaks JSON-RPC over stdout; a stray print would corrupt it."""

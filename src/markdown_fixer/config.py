@@ -100,11 +100,18 @@ def load_config():
     """Read and parse the config file. Never raises."""
     path = config_path()
 
-    if not path.exists():
-        return Config()
-
+    # Read without an exists() pre-check. exists() swallows only ENOENT,
+    # ENOTDIR, EBADF and ELOOP, so EACCES escaped it -- and only on Python
+    # <= 3.12, since 3.13 broadened it to catch every OSError. That made the
+    # escape invisible on a modern interpreter while it still reached
+    # /usr/bin/python3 3.9.6, which this project ships against. Opening the
+    # file raises the same way everywhere, so the missing case is separated by
+    # exception type instead: absent is the normal state under opt-in arming
+    # and must stay distinct from unreadable, which fails closed.
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return Config()
     except (OSError, ValueError) as exc:
         print(f"markdown-fixer: cannot read config {path}: {exc}", file=sys.stderr)
         return Config(path=path, malformed=True)

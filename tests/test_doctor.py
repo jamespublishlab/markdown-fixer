@@ -2,6 +2,8 @@
 
 import io
 import json
+import os
+import sys
 
 import pytest
 
@@ -130,6 +132,26 @@ class TestMalformedConfig:
         assert code == 0
         assert "NOT ARMED" in text
         assert "ARMED via" not in text
+
+    @pytest.mark.skipif(
+        sys.platform == "win32" or os.geteuid() == 0,
+        reason="directory permissions are not enforced for root or on Windows",
+    )
+    def test_unreadable_config_dir_still_reports(self, home):
+        """doctor is what you reach for when the config is misbehaving, so an
+        EACCES on the config path must produce a report, not a traceback.
+        Before the fix it exited 1 with nothing on stdout on Python <= 3.12."""
+        target = home / ".config" / "markdown-fixer"
+        write_config(home, {"hook_enabled": True})
+        target.chmod(0o000)
+        try:
+            code, text = report_text()
+        finally:
+            target.chmod(0o755)
+
+        assert code == 0
+        assert "NOT ARMED" in text
+        assert "unusable" in text
 
     def test_malformed_config_warning_stays_on_stderr(self, home, capsys):
         """report()'s output goes only to the caller-provided stream; the
