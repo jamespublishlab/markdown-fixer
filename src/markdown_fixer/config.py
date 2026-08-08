@@ -7,11 +7,18 @@ Config lives at $XDG_CONFIG_HOME/markdown-fixer/config.json, falling back to
 
     {
       "hook_enabled": true,
-      "exclude_patterns": ["^~/Documents/SecondBrain/(Daily|Weekly)/"]
+      "exclude_patterns": ["(^|/)(Daily|Weekly)/"]
     }
 
 The config file — not settings.json — is the durable arming signal, so the
 Claude Code hook line can stay byte-identical on every machine.
+
+Write patterns to match every path shape the hook can see: Write/Edit supply
+an absolute path, but the Obsidian MCP tools supply a path relative to the
+vault root instead (e.g. "Daily/x.md", not "/Users/you/.../Daily/x.md"). A
+pattern anchored with "^~/..." matches only the absolute form. is_excluded()
+matches unanchored (re.search), so an anchor-free pattern like the one above
+matches both.
 """
 
 import json
@@ -187,6 +194,14 @@ def is_excluded(filepath, patterns):
     form, so a config written either way works on any machine. When the path is
     not under home the two forms are identical and the pattern is simply tested
     twice.
+
+    Neither form helps a caller that never sends an absolute path in the
+    first place: the Obsidian MCP tools pass filenames relative to the vault
+    root (e.g. "Daily/x.md"), so a home-anchored pattern like "^~/.../Daily/"
+    cannot match what they send, regardless of this function's own logic.
+    There is no vault root to resolve against here -- the fix is an
+    unanchored pattern (see module docstring), not a change to this
+    function.
     """
     candidates = {filepath, collapse_home(filepath)}
     for pattern in patterns:

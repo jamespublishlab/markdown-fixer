@@ -25,7 +25,9 @@ def run(stdin=None, stdout=None):
 
     try:
         payload = json.load(stdin)
-    except (ValueError, OSError):
+    except Exception:  # noqa: BLE001
+        # Pathologically deep JSON raises RecursionError, not ValueError/OSError;
+        # this must never escape -- a hook failure must never block a write.
         return 0
 
     if not isinstance(payload, dict):
@@ -63,15 +65,20 @@ def run(stdin=None, stdout=None):
     if cleaned and cleaned != content:
         updated_input = dict(tool_input)
         updated_input["content"] = cleaned
-        json.dump(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "allow",
-                    "updatedInput": updated_input,
-                }
-            },
-            stdout,
-        )
+        try:
+            json.dump(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "allow",
+                        "updatedInput": updated_input,
+                    }
+                },
+                stdout,
+            )
+        except Exception:  # noqa: BLE001
+            # e.g. BrokenPipeError if the consumer closed the pipe. This
+            # function must never raise -- see module docstring.
+            return 0
 
     return 0

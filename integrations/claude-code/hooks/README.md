@@ -49,7 +49,7 @@ The hook is **opt-in**. It does nothing until armed on that machine, either by
 ```json
 {
   "hook_enabled": true,
-  "exclude_patterns": ["^~/Documents/SecondBrain/(Daily|Weekly)/"]
+  "exclude_patterns": ["(^|/)(Daily|Weekly)/"]
 }
 ```
 
@@ -58,6 +58,19 @@ Code. Setting `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config
 file. A malformed config file forces it unarmed as well, even against a
 truthy env var — an unreadable config means the exclusion set is unknown, and
 running with silently-empty exclusions is the wrong direction to fail in.
+
+**Write which path form your patterns need to match.** `Write` and `Edit`
+supply an **absolute** path (e.g.
+`/Users/you/Documents/SecondBrain/Daily/x.md`); the Obsidian MCP tools
+(`mcp__obsidian-mcp-tools__create_vault_file` and friends) supply a
+**vault-relative** path instead (e.g. `Daily/x.md`), because that's the form
+the plugin's own API takes. A pattern anchored with `^~/…` or `^/Users/…`
+therefore matches the first and **silently never matches the second** — a
+config written that way looks correct, `markdown-fixer doctor` reports it as
+`ok`, and it still does not protect notes an Obsidian MCP tool writes.
+Patterns are matched with `re.search` (unanchored), so an anchor-free form
+like `(^|/)(Daily|Weekly)/` matches both path shapes and is the recommended
+style for anything the Obsidian MCP tools can also write to.
 
 Run `markdown-fixer doctor` to see which route armed it (if any), what
 config file it's reading, and which exclusion patterns are active.
@@ -151,12 +164,15 @@ with `MARKDOWN_FIXER_EXCLUDE_PATTERNS` (a JSON array of regex strings — these
 add to the config's patterns, they don't replace them):
 
 ```bash
-export MARKDOWN_FIXER_EXCLUDE_PATTERNS='["^~/Documents/SecondBrain/(Daily|Weekly)/"]'
+export MARKDOWN_FIXER_EXCLUDE_PATTERNS='["(^|/)(Daily|Weekly)/"]'
 ```
 
 An invalid regex is reported to stderr and skipped; it does not stop the
 other patterns from applying. `markdown-fixer doctor` lists every pattern,
-its source (config or env), and whether it compiled.
+its source (config or env), and whether it compiled — including as `ok` for
+a pattern that compiles but happens to be anchored to the wrong path shape
+for one of the two callers (see [Arm it](#3-arm-it) above); `doctor` checks
+that a pattern is valid regex, not that it matches what you intend.
 
 ## Troubleshooting
 

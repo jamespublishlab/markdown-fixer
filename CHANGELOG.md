@@ -27,7 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MCP server stability:** JSON-RPC frames that are not dictionaries (e.g. bare `123`) no longer crash the stdin read loop and drop queued requests; the server now returns JSON-RPC error `-32600` (Invalid Request)
 
 ### Removed
-- **BREAKING:** `MARKDOWN_FIXER_EXCLUDE_PREFIXES`. Replaced by regex `exclude_patterns` in the config file and `MARKDOWN_FIXER_EXCLUDE_PATTERNS`. The old format was colon-separated, which cannot survive the move to regex because regexes contain colons
+- **BREAKING:** `MARKDOWN_FIXER_EXCLUDE_PREFIXES`. Replaced by regex `exclude_patterns` in the config file and `MARKDOWN_FIXER_EXCLUDE_PATTERNS`. The old format was colon-separated, which cannot survive the move to regex because regexes contain colons.
+
+  **Migrating:** each old colon-separated prefix becomes one regex. For example, old
+  `MARKDOWN_FIXER_EXCLUDE_PREFIXES=/Users/you/vault/Daily/:/Users/you/vault/Weekly/` becomes
+  `"exclude_patterns": ["(^|/)(Daily|Weekly)/"]` in the config file — not
+  `"exclude_patterns": ["^/Users/you/vault/(Daily|Weekly)/"]`, even though that looks like the
+  more literal translation. Anchoring to the absolute path only protects `Write`/`Edit`, which
+  send an absolute `file_path`; the Obsidian MCP tools (`mcp__obsidian-mcp-tools__…`) send a
+  `filename` relative to the vault root instead (e.g. `Daily/x.md`), which an
+  absolute-anchored pattern can never match. Patterns are matched unanchored (`re.search`), so
+  the anchor-free `(^|/)(Daily|Weekly)/` form matches both path shapes and is the recommended
+  style. See [hooks/README.md](integrations/claude-code/hooks/README.md#3-arm-it) for the full
+  explanation
 - `integrations/claude-code/hooks/pre-markdown-fix.py` — superseded by the `hook` subcommand
 - `integrations/mcp-server/server.py` — its logic moved into `markdown_fixer.mcp_server` (see Changed)
 - `integrations/mcp-server/install.sh` — superseded by `./scripts/install-all.sh --cli` plus pointing Claude Desktop at the zipapp's `mcp-server` subcommand (`command: <abs path>/markdown-fixer`, `args: ["mcp-server"]`)

@@ -65,7 +65,7 @@ either with `~/.config/markdown-fixer/config.json`:
 ```json
 {
   "hook_enabled": true,
-  "exclude_patterns": ["^~/Documents/SecondBrain/(Daily|Weekly)/"]
+  "exclude_patterns": ["(^|/)(Daily|Weekly)/"]
 }
 ```
 
@@ -73,6 +73,15 @@ or with the environment variable `MARKDOWN_FIXER_HOOK=1`. Setting
 `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config file. Run
 `markdown-fixer doctor` to see which route armed it (if any), and which
 exclusion patterns it will apply.
+
+Write patterns to match **both** path shapes the matcher's tools can send:
+`Write`/`Edit` supply an absolute path, but the Obsidian MCP tools
+(`mcp__obsidian-mcp-tools__…`) supply a path relative to the vault root
+instead (e.g. `Daily/x.md`, not `/Users/you/…/Daily/x.md`). A pattern
+anchored with `^~/…` matches only the first. Since patterns are matched
+unanchored (`re.search`), the anchor-free form above — `(^|/)(Daily|Weekly)/`
+— matches both. See
+[hooks/README.md](hooks/README.md#3-arm-it) for the full explanation.
 
 ## Components
 

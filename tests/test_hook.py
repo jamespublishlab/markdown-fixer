@@ -119,6 +119,17 @@ class TestGates:
         assert code == 0
         assert out == ""
 
+    def test_pathologically_deep_json_exits_zero(self, home):
+        """json.load() raises RecursionError (not ValueError/OSError) on
+        deeply nested input. run()'s docstring promises "Always returns 0";
+        a narrow except clause would let this escape uncaught."""
+        write_config(home, {"hook_enabled": True})
+        depth = 200_000
+        deeply_nested = "[" * depth + "]" * depth
+        code, out = run_hook(deeply_nested)
+        assert code == 0
+        assert out == ""
+
 
 class TestExclusions:
     def test_excluded_by_raw_path(self, home):
@@ -139,6 +150,37 @@ class TestExclusions:
         assert code == 0
         assert out != ""
         assert "ignoring invalid exclude pattern" in capsys.readouterr().err
+
+    def test_excluded_by_vault_relative_filename(self, home):
+        """Obsidian MCP tools pass a VAULT-RELATIVE filename (e.g. 'Daily/x.md'),
+        not an absolute path, so a pattern anchored at ^~/... can never match it.
+        A pattern written to match both forms -- the recommended style -- must
+        work for both the vault-relative caller (Obsidian MCP) AND the
+        absolute-path caller (Write/Edit)."""
+        write_config(home, {"hook_enabled": True, "exclude_patterns": ["(^|/)(Daily|Weekly)/"]})
+
+        code, out = run_hook(payload("Daily/2026-08-08.md", key="filename"))
+        assert code == 0
+        assert out == ""
+
+        code, out = run_hook(payload(home / "Weekly" / "2026-W32.md"))
+        assert code == 0
+        assert out == ""
+
+    def test_home_anchored_pattern_misses_vault_relative_filename(self, home):
+        """Documents the trap: an absolute-anchored pattern does NOT protect
+        Obsidian MCP writes. If this ever starts passing, the matching semantics
+        changed and the docs need revisiting."""
+        write_config(
+            home,
+            {
+                "hook_enabled": True,
+                "exclude_patterns": ["^~/Documents/SecondBrain/Daily/"],
+            },
+        )
+        code, out = run_hook(payload("Daily/2026-08-08.md", key="filename"))
+        assert code == 0
+        assert out != ""  # NOT protected -- the pattern cannot match
 
 
 class TestOutputShape:
