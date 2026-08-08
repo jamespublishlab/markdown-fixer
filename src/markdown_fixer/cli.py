@@ -25,6 +25,8 @@ EPILOG = """Examples:
   markdown-fixer file.md --dry-run    Preview changes
 """
 
+RESERVED = frozenset({"hook", "mcp-server", "doctor"})
+
 
 def build_parser():
     """Build the argument parser for file-fixing mode."""
@@ -112,6 +114,28 @@ def fix_files(args):
     return 0
 
 
+def run_hook(rest):
+    """`markdown-fixer hook <host>` -- speak a hook host's protocol on stdin."""
+    parser = argparse.ArgumentParser(prog="markdown-fixer hook")
+    parser.add_argument(
+        "host",
+        choices=["claude-code"],
+        help="Hook host whose protocol to speak",
+    )
+    parser.parse_args(rest)
+
+    from .hook import run
+
+    return run()
+
+
+def dispatch(name, rest):
+    """Route a reserved first word to its subcommand. Returns an exit code."""
+    if name == "hook":
+        return run_hook(rest)
+    raise AssertionError(f"unhandled reserved word: {name}")
+
+
 def main(argv=None):
     """Entry point.
 
@@ -122,6 +146,11 @@ def main(argv=None):
     """
     if argv is None:
         argv = sys.argv[1:]
+
+    # Reserved words win over filenames: `markdown-fixer hook` never fixes a
+    # file called "hook". Use ./hook for that.
+    if argv and argv[0] in RESERVED:
+        sys.exit(dispatch(argv[0], argv[1:]))
 
     parser = build_parser()
     args = parser.parse_args(argv)

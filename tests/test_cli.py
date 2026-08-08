@@ -112,3 +112,36 @@ class TestCLI:
         assert code == 1
         assert "not found" in err.lower()
         assert good.read_text() == original, "earlier file was modified before the run aborted"
+
+
+class TestReservedWordDispatch:
+    """`hook`, `mcp-server`, and `doctor` are reserved first words."""
+
+    def test_hook_dispatches_instead_of_treating_it_as_a_file(self, tmp_path, monkeypatch):
+        """A file literally named 'hook' must not shadow the subcommand."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "hook").write_text("not markdown")
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+        monkeypatch.delenv("MARKDOWN_FIXER_HOOK", raising=False)
+
+        # Unarmed, so the hook is a no-op that exits 0 without reading stdin.
+        code = run_cli(["hook", "claude-code"])
+        assert code == 0
+
+    def test_hook_requires_a_known_host(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        code = run_cli(["hook", "not-a-real-host"])
+        assert code == 2
+
+    def test_bare_file_mode_still_works(self, tmp_path, capsys):
+        test_file = tmp_path / "test.md"
+        test_file.write_text("# Header\n- List item\nText")
+        code = run_cli([str(test_file), "--in-place"])
+        assert code == 0
+        assert "Formatted" in capsys.readouterr().out
+
+    def test_reserved_set_contents(self):
+        from markdown_fixer.cli import RESERVED
+
+        assert RESERVED == frozenset({"hook", "mcp-server", "doctor"})
