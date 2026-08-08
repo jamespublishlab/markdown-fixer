@@ -17,8 +17,20 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Configuration
-VERSION="1.1.0"
+# Derived from the package itself (same approach as build-release.sh) so this
+# can't drift from the one true version in __version__.py. Falls back to
+# "unknown" rather than aborting here -- the Python-3-not-found check below
+# gives a much friendlier error, and this must not preempt it.
+VERSION=$(python3 -c "
+import sys
+sys.path.insert(0, '$PROJECT_ROOT/src')
+from markdown_fixer.__version__ import __version__
+print(__version__)
+" 2>/dev/null || echo "unknown")
 REPO="jamespublishlab/markdown-fixer"
 GITHUB_URL="https://github.com/$REPO"
 
@@ -116,9 +128,6 @@ fi
 if $INSTALL_CLI; then
     echo -e "${BOLD}${BLUE}[1/3] Installing CLI tool (zipapp)...${NC}"
 
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
     BIN_DIR="$HOME/.local/bin"
     TARGET="$BIN_DIR/markdown-fixer"
     ALIAS_PATH="$BIN_DIR/mdfixer"
@@ -172,9 +181,6 @@ if $INSTALL_QUICK_ACTION; then
     mkdir -p "$WORKFLOW_DIR"
 
     # Check if local workflow exists
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
     if [ -d "$PROJECT_ROOT/integrations/macos-quick-action/$WORKFLOW_NAME" ]; then
         # Local installation
         echo "  Installing from local files..."
@@ -199,9 +205,6 @@ if $INSTALL_APP; then
     APP_NAME="Markdown Fixer.app"
 
     # Check if local app exists
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
     if [ -d "$PROJECT_ROOT/integrations/macos-app/build/$APP_NAME" ]; then
         # Local installation
         echo "  Installing from local files..."
