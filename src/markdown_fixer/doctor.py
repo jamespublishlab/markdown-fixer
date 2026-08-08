@@ -101,8 +101,8 @@ def report(stdout=None):
 
     lines.append("")
     lines.append("note         doctor sees THIS shell's PATH. Hooks and MCP servers inherit")
-    lines.append(f"             their parent process's environment instead. {PATTERNS_ENV_VAR}")
-    lines.append("             and PATH may differ there.")
+    lines.append(f"             their parent process's environment instead. {HOOK_ENV_VAR},")
+    lines.append(f"             {PATTERNS_ENV_VAR}, and PATH may all differ there.")
 
     stdout.write("\n".join(lines) + "\n")
     return 0

@@ -44,18 +44,27 @@ class TestDoctor:
         write_config(home, {"hook_enabled": True})
         _, text = report_text()
         # "ARMED" alone is also a substring of "NOT ARMED" -- assert the
-        # unambiguous phrase and that the negative form is absent, so a
-        # report() that is stuck on NOT ARMED cannot pass this test.
-        assert "ARMED via" in text
+        # unambiguous phrase, and that the negative form is absent, so a
+        # report() that is stuck on NOT ARMED cannot pass this test. Bare
+        # "config" is even weaker than that: the report's `config <path>`
+        # line prints unconditionally in EVERY report regardless of arming
+        # state, so it would pass even if arming_source() falsely credited
+        # config for an env-driven (or malformed, or unarmed) outcome. Assert
+        # the actual attribution phrase arming_source() emits instead.
+        assert "ARMED via config" in text
         assert "NOT ARMED" not in text
-        assert "config" in text
 
     def test_reports_armed_via_env(self, home, monkeypatch):
         monkeypatch.setenv(cfgmod.HOOK_ENV_VAR, "1")
         _, text = report_text()
         assert "ARMED via" in text
         assert "NOT ARMED" not in text
-        assert cfgmod.HOOK_ENV_VAR in text
+        # Bare `cfgmod.HOOK_ENV_VAR in text` would no longer discriminate:
+        # the PATH-blindness note at the bottom of every report now also
+        # names HOOK_ENV_VAR unconditionally (see doctor.py's note block), so
+        # that check would pass even if arming_source() never mentioned it.
+        # Anchor on the exact attribution phrase arming_source() emits.
+        assert f"ARMED via {cfgmod.HOOK_ENV_VAR}=" in text
 
     def test_labels_pattern_sources(self, home, monkeypatch):
         write_config(home, {"hook_enabled": True, "exclude_patterns": ["^~/Daily/"]})
