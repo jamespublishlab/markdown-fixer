@@ -7,10 +7,26 @@ Fix common markdown formatting issues in LLM-generated content with one command.
 
 ## Quick Start
 
+**macOS:**
+
+```bash
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli     # builds and installs ~/.local/bin/markdown-fixer
+markdown-fixer file.md --in-place
+```
+
+**Windows, Linux, or by choice on macOS:**
+
 ```bash
 pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 markdown-fixer file.md --in-place
 ```
+
+`pip install` also gives you `python -m markdown_fixer.mcp_server`; the
+zipapp's supported entry for that is `markdown-fixer mcp-server`. On Linux,
+build the zipapp yourself with `scripts/build-zipapp.sh` and copy it onto
+`PATH` — `install-all.sh` is macOS-only.
 
 **New to markdown-fixer?** See the [Getting Started Guide](docs/getting-started.md).
 

@@ -15,7 +15,8 @@ markdown-fixer integrates with multiple platforms and workflows. Choose the inte
 
 ## Command Line
 
-The CLI is installed automatically with the Python package.
+Install the zipapp (macOS/Linux) or the Python package (any platform); either
+way you get the `markdown-fixer` command.
 
 ```bash
 markdown-fixer file.md --in-place
@@ -87,7 +88,8 @@ Ask naturally:
 
 ### Auto-Fix Hook
 
-Automatically fixes markdown files after Claude writes or edits them.
+Cleans markdown content before Claude writes it to disk. Opt-in — must be
+armed per machine via a config file or environment variable.
 
 **Setup:** [Claude Code Guide](../integrations/claude-code/README.md)
 

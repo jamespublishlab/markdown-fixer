@@ -4,13 +4,21 @@ Get up and running with markdown-fixer in under 5 minutes.
 
 ## Step 1: Install
 
-**Quick install:**
+**Quick install (macOS):**
+
+```bash
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli     # builds and installs ~/.local/bin/markdown-fixer
+```
+
+**Everywhere else (Windows, or by choice on macOS/Linux):**
 
 ```bash
 pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
-**Other options:** See [Installation Guide](installation.md) for pipx, from source, and more.
+**Other options:** See [Installation Guide](installation.md) for Linux, from-source builds, and more.
 
 ## Step 2: Fix Your First File
 

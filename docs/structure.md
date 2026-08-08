@@ -45,32 +45,45 @@ markdown-fixer/
 │   │   ├── quick-action-script.sh   # Automator script
 │   │   └── README.md                # Installation guide
 │   │
-│   └── mcp-server/                   # Claude Desktop MCP server
-│       ├── server.py                 # MCP server implementation
-│       ├── install.sh                # Auto-installer
-│       ├── claude_desktop_config.json # Config template
-│       ├── requirements.txt          # Server dependencies
+│   └── mcp-server/                   # Claude Desktop MCP server config/docs
+│       ├── install.sh                # Legacy installer, references a deleted
+│       │                             #   file — see README's Installation section
+│       ├── claude_desktop_config.json # Config template (absolute zipapp path)
+│       ├── config-templates/         # Per-platform config templates
+│       ├── requirements.txt          # Legacy pip-install helper
 │       └── README.md                 # MCP server documentation
 │
 ├── scripts/                          # Build and installation scripts
-│   ├── build-release.sh              # Build all release artifacts
-│   ├── install-all.sh                # Universal installer (macOS)
+│   ├── build-release.sh              # Build wheel/sdist/Quick Action/plugin zips
+│   ├── build-zipapp.sh               # Build the self-contained zipapp CLI
+│   ├── install-all.sh                # Universal installer (macOS only)
 │   └── install-quick-action.sh       # Quick Action installer
 │
 ├── src/markdown_fixer/               # Core Python package
 │   ├── __init__.py                   # Package exports
 │   ├── __version__.py                # Version information
 │   ├── core.py                       # Formatting logic (MarkdownFixer class)
-│   ├── cli.py                        # Command-line interface (Click)
-│   └── mcp_server.py                 # MCP server wrapper (delegates to integrations/)
+│   ├── cli.py                        # Command-line interface (argparse; stdlib only)
+│   ├── hook.py                       # Claude Code PreToolUse hook (`hook claude-code`)
+│   ├── config.py                     # Machine-local config: arming, exclude patterns
+│   ├── doctor.py                     # `doctor` subcommand: reports resolved state
+│   └── mcp_server.py                 # MCP server (`mcp-server` subcommand)
 │
 ├── tests/                            # Test suite
-│   ├── fixtures/                     # Test fixtures
-│   │   ├── input/                    # Input test files
-│   │   └── expected/                 # Expected output files
-│   ├── test_core.py                  # Core functionality tests
+│   ├── fixtures/                     # Golden fixtures, one dir per case
+│   │   └── <case-name>/
+│   │       ├── input.md              # Input file
+│   │       └── expected.md           # Expected output
+│   ├── test_core.py                  # Core formatting logic tests
 │   ├── test_cli.py                   # CLI interface tests
-│   └── test_mcp_server.py            # MCP server tests
+│   ├── test_fixtures.py              # Runs the golden fixtures
+│   ├── test_config.py                # Config parsing and arming tests
+│   ├── test_hook.py                  # PreToolUse hook tests
+│   ├── test_doctor.py                # `doctor` subcommand tests
+│   ├── test_mcp_server.py            # MCP server tests
+│   ├── test_mcp_stdout_purity.py     # Asserts stdout carries only protocol JSON
+│   ├── test_zipapp.py                # Builds and exercises the zipapp artifact
+│   └── test_install_all.py           # Exercises scripts/install-all.sh (macOS only)
 │
 ├── .gitignore                        # Git ignore rules
 ├── CHANGELOG.md                      # Version history
@@ -89,7 +102,8 @@ markdown-fixer/
 
 ### Modular Architecture
 
-- **Core Package**: Standalone Python package (pip/pipx installable)
+- **Core Package**: Stdlib-only; distributed as a self-contained zipapp
+  (`scripts/build-zipapp.sh`) or pip-installable from source
 - **Integrations**: Independent, optional platform-specific wrappers
 - **Scripts**: Automation for building and installing
 - **Tests**: Comprehensive coverage for core and CLI
@@ -117,9 +131,10 @@ Six usage modes, same logic:
 ### CLI Interface
 
 - **`src/markdown_fixer/cli.py`**: Command-line interface
-  - Built with Click framework
+  - Built with argparse (stdlib only — no third-party dependency at runtime)
   - Options: `--in-place`, `--dry-run`, `--output`, `--verbose`
-  - Entry point: `markdown-fixer` command
+  - Entry point: `markdown-fixer` command; reserved subcommands `hook`,
+    `mcp-server`, `doctor` dispatch before file-fixing argument parsing
 
 ### Configuration
 
@@ -134,9 +149,12 @@ Six usage modes, same logic:
 
 - **Unit Tests**: `tests/test_core.py` - Core formatting logic
 - **Integration Tests**: `tests/test_cli.py` - CLI interface
-- **MCP Tests**: `tests/test_mcp_server.py` - MCP server
-- **Fixtures**: `tests/fixtures/` - Input/expected output pairs
-- **Target**: 80%+ coverage
+- **Config/Hook/Doctor Tests**: `tests/test_config.py`, `tests/test_hook.py`,
+  `tests/test_doctor.py` - arming, exclusion patterns, resolved-state reporting
+- **MCP Tests**: `tests/test_mcp_server.py`, `tests/test_mcp_stdout_purity.py`
+- **Zipapp Tests**: `tests/test_zipapp.py` - builds and exercises the artifact
+- **Fixtures**: `tests/fixtures/<case-name>/{input,expected}.md` - golden
+  input/output pairs, run by `tests/test_fixtures.py`
 
 ### Running Tests
 
@@ -218,7 +236,19 @@ CI runs these checks on every PR - run locally first to catch issues early.
 
 ## Distribution
 
-### Build Artifacts
+### The zipapp CLI
+
+```bash
+./scripts/build-zipapp.sh
+# -> dist/markdown-fixer, a self-contained executable
+#    (/usr/bin/env python3 shebang, no venv or third-party deps needed)
+```
+
+`scripts/install-all.sh --cli` calls this internally and installs the result
+to `~/.local/bin/markdown-fixer` (macOS only; on Linux, run
+`build-zipapp.sh` and copy the artifact onto `PATH` yourself).
+
+### Other Build Artifacts
 
 ```bash
 ./scripts/build-release.sh
@@ -229,6 +259,9 @@ CI runs these checks on every PR - run locally first to catch issues early.
 # - Mac App (.zip, if tools available)
 # - SHA256SUMS.txt
 ```
+
+`build-release.sh` does not build the zipapp — run `build-zipapp.sh`
+separately for that.
 
 ### Release Process
 

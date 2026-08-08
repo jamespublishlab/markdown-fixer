@@ -31,7 +31,9 @@ Adds "Fix Markdown" to Finder's right-click menu.
 - macOS 10.15 (Catalina) or later
 - `markdown-fixer` must be installed:
   ```bash
-  pipx install markdown-fixer
+  git clone https://github.com/jamespublishlab/markdown-fixer
+  cd markdown-fixer
+  ./scripts/install-all.sh --cli
   ```
 
 ## Creating the Workflow Manually
@@ -56,9 +58,9 @@ If you need to create the workflow from scratch:
 
 The Quick Action cannot find the `markdown-fixer` command. Fix:
 
-1. Ensure it's installed: `pipx install git+https://github.com/jamespublishlab/markdown-fixer.git`
-2. Check installation: `which markdown-fixer`
-3. If using pip instead of pipx, make sure `~/.local/bin` is in PATH
+1. Ensure it's installed: `./scripts/install-all.sh --cli` (from a clone of the repo)
+2. Check installation: `ls -la ~/.local/bin/markdown-fixer`
+3. Make sure `~/.local/bin` is in your PATH
 
 ### Quick Action doesn't appear
 

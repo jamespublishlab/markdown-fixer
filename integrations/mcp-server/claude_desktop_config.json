@@ -1,11 +1,8 @@
 {
   "mcpServers": {
     "markdown-fixer": {
-      "command": "/Users/YOUR_USERNAME/.local/pipx/venvs/markdown-fixer/bin/python3",
-      "args": [
-        "-m",
-        "markdown_fixer.mcp_server"
-      ]
+      "command": "/Users/YOUR_USERNAME/.local/bin/markdown-fixer",
+      "args": ["mcp-server"]
     }
   }
 }

@@ -8,12 +8,15 @@ Solutions to common issues with markdown-fixer.
 
 The `markdown-fixer` command isn't in your PATH.
 
-**Solution 1:** Install with pipx (recommended)
+**Solution 1:** Reinstall the zipapp (macOS) and check the installer's PATH warning
 
 ```bash
-pip install pipx
-pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
+./scripts/install-all.sh --cli
 ```
+
+If `~/.local/bin` isn't on your PATH, the installer prints a warning — the
+Claude Code hook resolves `markdown-fixer` via PATH too, so it will silently
+do nothing until this is fixed.
 
 **Solution 2:** Add to PATH
 
@@ -23,7 +26,7 @@ export PATH="$HOME/.local/bin:$PATH"
 source ~/.bashrc  # or source ~/.zshrc
 ```
 
-**Solution 3:** Run as Python module
+**Solution 3:** Run as Python module (requires `pip install`, see below)
 
 ```bash
 python -m markdown_fixer.cli file.md -i
@@ -31,7 +34,9 @@ python -m markdown_fixer.cli file.md -i
 
 ### "No module named 'markdown_fixer'"
 
-The package isn't installed in your Python environment.
+This only applies if you installed with `pip` (the zipapp is self-contained
+and doesn't need the package importable). The package isn't installed in
+your Python environment:
 
 ```bash
 pip install git+https://github.com/jamespublishlab/markdown-fixer.git
@@ -43,7 +48,7 @@ pip install -e .
 
 ```bash
 chmod +x scripts/install-all.sh
-chmod +x integrations/mcp-server/install.sh
+chmod +x scripts/build-zipapp.sh
 ```
 
 ## Usage Issues
@@ -139,12 +144,16 @@ which markdown-fixer
 
 **Auto-fix hook not running:**
 
+The hook is opt-in and armed per machine — see whether it's armed, and by
+what:
+
 ```bash
-# Check hook configuration
-cat .claude/settings.local.json | grep -A 20 hooks
+markdown-fixer doctor
 ```
 
-**See:** [Claude Code Guide](../.claude/README.md)
+Also check `~/.claude/settings.json` has the `PreToolUse` hook entry.
+
+**See:** [Claude Code Hooks Guide](../integrations/claude-code/hooks/README.md)
 
 ### Claude Desktop (MCP)
 

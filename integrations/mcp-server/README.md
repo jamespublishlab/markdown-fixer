@@ -8,7 +8,7 @@ Integrate markdown-fixer directly into Claude Desktop via the Model Context Prot
 
 **Non-technical user?** We have a simple, step-by-step guide just for you:
 
-👉 **[Simple Setup Guide for Non-Technical Users](../../CLAUDE_DESKTOP_SIMPLE_SETUP.md)** 👈
+👉 **[Claude Desktop Setup Guide](../../docs/claude-desktop-setup.md)** 👈
 
 No command line knowledge needed! Just copy, paste, and click.
 
@@ -32,37 +32,32 @@ Once installed, Claude Desktop can:
 
 ## Installation
 
-### Quick Install (Recommended)
+### 1. Install markdown-fixer
+
+**macOS (recommended):** build and install the zipapp CLI first — the MCP
+server ships inside it as the `mcp-server` subcommand:
 
 ```bash
-cd integrations/mcp-server
-chmod +x install.sh
-./install.sh
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli     # builds and installs ~/.local/bin/markdown-fixer
 ```
 
-The installer will:
+**Linux:** `install-all.sh` is macOS-only. Build the artifact with
+`scripts/build-zipapp.sh` and copy `dist/markdown-fixer` onto your `PATH` by
+hand — it carries a `/usr/bin/env python3` shebang and needs no venv.
 
-1. Check if Python and markdown-fixer are installed
-2. Install markdown-fixer if needed
-3. Configure Claude Desktop automatically
-4. Provide next steps
-
-### Manual Installation
-
-#### 1. Install markdown-fixer
+**Windows, or if you'd rather use `pip`:**
 
 ```bash
-# Install from PyPI (recommended)
-pip3 install markdown-fixer
-
-# Or from project root
-pip3 install -e .
-
-# Or with pipx
-pipx install markdown-fixer
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
-#### 2. Configure Claude Desktop
+This also works on macOS/Linux and is required if you want to invoke the
+server as `python -m markdown_fixer.mcp_server` instead of through the
+zipapp's `mcp-server` subcommand.
+
+### 2. Configure Claude Desktop
 
 **macOS:**
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -73,83 +68,43 @@ Edit `~/.config/Claude/claude_desktop_config.json`
 **Windows:**
 Edit `%APPDATA%\Claude\claude_desktop_config.json`
 
-Add this configuration:
-
-**Method 1: pipx (Recommended)**
-
-This is the cleanest approach - pipx creates an isolated environment:
+**If you installed the zipapp (macOS/Linux), add this:**
 
 ```json
 {
   "mcpServers": {
     "markdown-fixer": {
-      "command": "/Users/YOUR_USERNAME/.local/pipx/venvs/markdown-fixer/bin/python3",
-      "args": [
-        "-m",
-        "markdown_fixer.mcp_server"
-      ]
+      "command": "/Users/YOUR_USERNAME/.local/bin/markdown-fixer",
+      "args": ["mcp-server"]
     }
   }
 }
 ```
 
-**Note:** Replace `YOUR_USERNAME` with your actual username. On Windows, the path is `%USERPROFILE%\.local\pipx\venvs\markdown-fixer\Scripts\python.exe`
+Replace `YOUR_USERNAME` with your actual username. **The path must be
+absolute** — Claude Desktop is a GUI app that inherits launchd's environment,
+not your shell's. Its actual `PATH` is `/usr/bin:/bin:/usr/sbin:/sbin`, which
+contains neither `~/.local/bin` nor Homebrew, so a bare `"command":
+"markdown-fixer"` will not resolve. A future edit that "simplifies" this back
+to a bare command will silently break the integration.
 
-**Why this is best:**
-
-- Isolated environment (no conflicts with system Python)
-- Works globally (not tied to project directory)
-- Survives project deletion
-- Clean uninstall with `pipx uninstall markdown-fixer`
-
-**Method 2: System Python (Alternative)**
-
-Only if you've installed to system Python (not recommended):
+**If you installed with `pip` (Windows, or by choice on macOS/Linux):**
 
 ```json
 {
   "mcpServers": {
     "markdown-fixer": {
       "command": "python3",
-      "args": [
-        "-m",
-        "markdown_fixer.mcp_server"
-      ]
+      "args": ["-m", "markdown_fixer.mcp_server"]
     }
   }
 }
 ```
 
-**Note:** This only works if markdown-fixer is in your system Python packages
+On Windows, use `"command": "python"` instead — see
+[config-templates/windows-config.json](config-templates/windows-config.json).
 
-**Method 3: Development Mode (Source Path)**
-
-Only use this if you're actively developing the MCP server code:
-
-```json
-{
-  "mcpServers": {
-    "markdown-fixer": {
-      "command": "python3",
-      "args": [
-        "/absolute/path/to/markdown-fixer/integrations/mcp-server/server.py"
-      ],
-      "env": {
-        "PYTHONPATH": "/absolute/path/to/markdown-fixer/src"
-      }
-    }
-  }
-}
-```
-
-**When to use this:**
-
-- You're modifying the MCP server code
-- You want to test changes before installing
-
-**Important:** Replace `/absolute/path/to/markdown-fixer` with the actual path.
-
-#### 3. Restart Claude Desktop
+### 3. Restart Claude Desktop
 
 Close and reopen Claude Desktop for changes to take effect.
 
@@ -293,22 +248,22 @@ cat ~/.config/Claude/claude_desktop_config.json
 
 **Verify paths:**
 
-- Ensure paths in config are absolute, not relative
-- Check that `server.py` exists at the specified path
-- Verify `PYTHONPATH` points to the `src` directory
+- Ensure the `command` path in your config is absolute, not relative or bare
+- If you're using the zipapp form, confirm the path exists: `ls -la ~/.local/bin/markdown-fixer`
+- If you're using the `pip`/module form, confirm the module resolves with the same Python `command` names (see below)
 
 ### Tools Not Working
 
-**Test server directly:**
+**Test the server directly:**
 ```bash
-# Using module (recommended)
-python3 -m markdown_fixer.mcp_server
+# Zipapp form
+~/.local/bin/markdown-fixer mcp-server
 # Type: {"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
 # Press Enter
 # Should see a JSON response
 
-# Or using server.py path
-python3 integrations/mcp-server/server.py
+# pip-installed / module form
+python3 -m markdown_fixer.mcp_server
 ```
 
 **Check logs:**
@@ -317,7 +272,7 @@ python3 integrations/mcp-server/server.py
 - Look for MCP connection errors
 - Check stderr output
 
-### Import Errors
+### Import Errors (pip / module form only)
 
 **Ensure markdown-fixer is installed:**
 ```bash
@@ -326,14 +281,7 @@ python3 -c "import markdown_fixer; print(markdown_fixer.__version__)"
 
 **If not found:**
 ```bash
-pip install -e /path/to/markdown-fixer
-```
-
-### Permission Issues
-
-**Make server executable:**
-```bash
-chmod +x integrations/mcp-server/server.py
+pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 
 ### Zod Validation Errors
@@ -344,35 +292,29 @@ If you see errors like `ZodError: Invalid input` or `Expected string, received n
 
 **Solution:**
 
-1. Make sure you're using the latest version of the MCP server
+1. Make sure you're using the latest version (rebuild the zipapp, or `git pull` and reinstall)
 2. Restart Claude Desktop completely:
    ```bash
    killall Claude
    # Then reopen Claude Desktop
    ```
-3. Check that your server.py is up to date (should handle null IDs gracefully)
-
-**Test the server:**
-```bash
-npx @modelcontextprotocol/inspector /absolute/path/to/server.py
-```
-
-This opens a web interface where you can see all requests/responses and verify the server is working correctly.
 
 ## Advanced Configuration
 
-### Custom Python Environment
+### Environment Variables
 
-If using a virtual environment:
+Claude Desktop launches the server as its own subprocess, so it does not
+inherit your shell's environment. Pass anything the server needs explicitly:
 
 ```json
 {
   "mcpServers": {
     "markdown-fixer": {
-      "command": "/path/to/venv/bin/python",
-      "args": [
-        "/absolute/path/to/server.py"
-      ]
+      "command": "/Users/YOUR_USERNAME/.local/bin/markdown-fixer",
+      "args": ["mcp-server"],
+      "env": {
+        "CUSTOM_VAR": "value"
+      }
     }
   }
 }
@@ -380,38 +322,18 @@ If using a virtual environment:
 
 ### Multiple Servers
 
-You can run multiple MCP servers:
+You can run multiple MCP servers side by side:
 
 ```json
 {
   "mcpServers": {
     "markdown-fixer": {
-      "command": "python3",
-      "args": ["/path/to/markdown-fixer/integrations/mcp-server/server.py"]
+      "command": "/Users/YOUR_USERNAME/.local/bin/markdown-fixer",
+      "args": ["mcp-server"]
     },
     "other-server": {
       "command": "node",
       "args": ["/path/to/other/server.js"]
-    }
-  }
-}
-```
-
-### Environment Variables
-
-Add custom environment variables:
-
-```json
-{
-  "mcpServers": {
-    "markdown-fixer": {
-      "command": "python3",
-      "args": ["/path/to/server.py"],
-      "env": {
-        "PYTHONPATH": "/path/to/src",
-        "LOG_LEVEL": "DEBUG",
-        "CUSTOM_VAR": "value"
-      }
     }
   }
 }
@@ -422,34 +344,24 @@ Add custom environment variables:
 ### Testing the Server
 
 ```bash
-# Run server in stdio mode (module approach)
+# Run the server in stdio mode
 python3 -m markdown_fixer.mcp_server
+# or, against a built zipapp:
+dist/markdown-fixer mcp-server
 
-# Or using server.py path
-python3 integrations/mcp-server/server.py
-
-# Send test request
+# Send a test request
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | python3 -m markdown_fixer.mcp_server
 ```
 
-### Debugging
-
-Enable debug logging by editing `server.py`:
-
-```python
-logging.basicConfig(
-    level=logging.DEBUG,  # Change from INFO to DEBUG
-    # ...
-)
-```
+The implementation lives in `src/markdown_fixer/mcp_server.py`.
 
 ### Extending the Server
 
 Add new tools by:
 
-1. Add tool definition in `_handle_tools_list()`
-2. Implement handler method
-3. Add case in `_handle_tool_call()`
+1. Add a tool definition in `_handle_tools_list()`
+2. Implement a handler method
+3. Add a case in `_handle_tool_call()`
 
 Example:
 
@@ -488,6 +400,14 @@ nano ~/.config/Claude/claude_desktop_config.json
 
 ### Uninstall markdown-fixer
 
+If you installed the zipapp:
+
+```bash
+rm -f ~/.local/bin/markdown-fixer ~/.local/bin/mdfixer
+```
+
+If you installed with pip:
+
 ```bash
 pip uninstall markdown-fixer
 ```
@@ -499,7 +419,7 @@ Claude Desktop
       ↓
    MCP Protocol (stdio)
       ↓
-server.py (MCP Server)
+markdown_fixer.mcp_server (MCP Server)
       ↓
 markdown_fixer.core.MarkdownFixer
       ↓
@@ -508,7 +428,8 @@ Fixed Markdown
 
 The server:
 
-- Runs as a subprocess of Claude Desktop
+- Runs as a subprocess of Claude Desktop, invoked either via the zipapp's
+  `mcp-server` subcommand or as `python -m markdown_fixer.mcp_server`
 - Communicates via JSON-RPC over stdio
 - Calls markdown-fixer's core logic
 - Returns results to Claude
@@ -531,7 +452,7 @@ The server:
 
 - **Claude Desktop**: 1.0.0+
 - **Python**: 3.8+
-- **OS**: macOS, Linux (Windows support planned)
+- **OS**: macOS and Linux (zipapp or `pip install`); Windows (`pip install`)
 - **MCP Protocol**: 2024-11-05
 
 ## FAQ
@@ -563,7 +484,7 @@ A: No. Everything runs locally on your machine.
 ## See Also
 
 - [Main Project Documentation](../../README.md)
-- [Claude Code Integration](../../.claude/README.md)
+- [Claude Code Integration](../claude-code/README.md)
 - [Other Integrations](../README.md)
 
 ## License

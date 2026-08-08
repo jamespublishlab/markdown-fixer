@@ -1,6 +1,7 @@
 #!/bin/bash
 # Fix Markdown - Quick Action Script
-# Requires markdown-fixer to be installed via pipx or pip
+# Requires markdown-fixer on PATH or at ~/.local/bin (installed via
+# ./scripts/install-all.sh --cli, or `pip install`)
 #
 # This script should be used in an Automator Quick Action:
 # 1. Open Automator

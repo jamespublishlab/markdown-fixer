@@ -19,13 +19,12 @@ which markdown-fixer
 If not installed, install it:
 
 ```bash
-# If in the markdown-fixer project directory
-pip install -e .
+# Build and install the zipapp CLI (macOS)
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli
 
-# Install from GitHub
-pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
-
-# Or with pip
+# Or with pip (all platforms; also required for python -m markdown_fixer.mcp_server)
 pip install git+https://github.com/jamespublishlab/markdown-fixer.git
 ```
 

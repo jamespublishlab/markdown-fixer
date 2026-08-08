@@ -7,10 +7,16 @@ Claude Code integrations for markdown-fixer: slash commands, skill, and auto-fix
 ### 1. Install markdown-fixer
 
 ```bash
-pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
-# or
-pip install git+https://github.com/jamespublishlab/markdown-fixer.git
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli     # builds and installs ~/.local/bin/markdown-fixer
 ```
+
+`pip install .` still works and is required only if you want to invoke
+`python -m markdown_fixer.mcp_server` directly; the zipapp's supported entry
+for that is `markdown-fixer mcp-server`. On Linux, `install-all.sh` is
+macOS-only — build with `scripts/build-zipapp.sh` and copy the artifact onto
+your `PATH` by hand instead.
 
 ### 2. Install Claude Code Components
 
@@ -30,23 +36,21 @@ cp skill/markdown-fixer ~/.claude/skills/
 ```
 
 **Auto-Fix Hook:**
-```bash
-# Copy hook script
-mkdir -p ~/.claude/hooks/
-cp hooks/post-markdown-fix.py ~/.claude/hooks/
-```
 
-Then add to your `~/.claude/settings.json`:
+The hook is built into the `markdown-fixer` binary — there is no separate
+script to copy. Add this line to your `~/.claude/settings.json` under
+`hooks.PreToolUse`. It is identical on every machine and contains no paths:
+
 ```json
 {
   "hooks": {
-    "PostToolUse": [
+    "PreToolUse": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write|Edit|Update|mcp__obsidian-mcp-tools__(create|patch|append).*",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/hooks/post-markdown-fix.py\""
+            "command": "command -v markdown-fixer >/dev/null 2>&1 && markdown-fixer hook claude-code || true"
           }
         ]
       }
@@ -54,6 +58,21 @@ Then add to your `~/.claude/settings.json`:
   }
 }
 ```
+
+The hook is **opt-in**: this line alone does nothing. Arm it per machine,
+either with `~/.config/markdown-fixer/config.json`:
+
+```json
+{
+  "hook_enabled": true,
+  "exclude_patterns": ["^~/Documents/SecondBrain/(Daily|Weekly)/"]
+}
+```
+
+or with the environment variable `MARKDOWN_FIXER_HOOK=1`. Setting
+`MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config file. Run
+`markdown-fixer doctor` to see which route armed it (if any), and which
+exclusion patterns it will apply.
 
 ## Components
 
@@ -89,14 +108,17 @@ AI-guided markdown fixing workflows. The skill enables Claude Code to:
 
 ### Auto-Fix Hook (`hooks/`)
 
-Automatically fixes markdown files after Claude writes or edits them.
+Cleans markdown content before Claude writes it to disk. See
+[hooks/README.md](hooks/README.md) for the full arming and configuration
+details.
 
 **How it works:**
 
-- Triggers after Write/Edit tools complete
+- A `PreToolUse` hook intercepts Write, Edit, Update, and the Obsidian MCP
+  create/patch/append tools before they run
 - Only processes `.md` files
-- Runs markdown-fixer silently
-- Only active if markdown-fixer is installed
+- Only runs when armed on that machine (opt-in — see [hooks/README.md](hooks/README.md))
+- Only active if markdown-fixer is on `PATH`
 
 ## Usage Comparison
 
@@ -119,14 +141,16 @@ markdown-fixer --version
 
 ### Hook not running?
 
-1. Verify the hook script is in place:
+1. Confirm it's armed and see what it will skip:
    ```bash
-   ls -la ~/.claude/hooks/post-markdown-fix.py
+   markdown-fixer doctor
    ```
 
-2. Check your settings.json has the hook configured
+2. Check `~/.claude/settings.json` has the `PreToolUse` entry configured (see
+   [Installation](#installation) above)
 
-3. Ensure markdown-fixer is in your PATH
+3. Ensure `markdown-fixer` is on your `PATH` — the hook command resolves it
+   with `command -v`, same as your shell
 
 ## See Also
 

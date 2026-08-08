@@ -1,29 +1,37 @@
 # Claude Code Hooks
 
-Auto-fix hook that integrates markdown-fixer with Claude Code.
+The `PreToolUse` hook that integrates markdown-fixer with Claude Code. It is
+built into the `markdown-fixer` binary as the `hook claude-code` subcommand —
+there is no longer a standalone script in this directory to install.
 
 ## Installation
 
 ### 1. Install markdown-fixer
 
 ```bash
-pipx install markdown-fixer
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli     # builds and installs ~/.local/bin/markdown-fixer
 ```
+
+On Linux, `install-all.sh` is macOS-only — build with `scripts/build-zipapp.sh`
+and put the artifact on your `PATH` by hand.
 
 ### 2. Configure Claude Code
 
-Add to your `~/.claude/settings.json`:
+Add to `~/.claude/settings.json` under `hooks.PreToolUse` — this line is
+identical on every machine and contains no paths:
 
 ```json
 {
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|mcp__obsidian-mcp-tools__(create|patch|append).*",
+        "matcher": "Write|Edit|Update|mcp__obsidian-mcp-tools__(create|patch|append).*",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /path/to/markdown-fixer/integrations/claude-code/hooks/pre-markdown-fix.py"
+            "command": "command -v markdown-fixer >/dev/null 2>&1 && markdown-fixer hook claude-code || true"
           }
         ]
       }
@@ -32,50 +40,60 @@ Add to your `~/.claude/settings.json`:
 }
 ```
 
-Update the path to match your installation location.
+### 3. Arm it
+
+The hook is **opt-in**. It does nothing until armed on that machine, either by
+`~/.config/markdown-fixer/config.json` (or
+`$XDG_CONFIG_HOME/markdown-fixer/config.json`):
+
+```json
+{
+  "hook_enabled": true,
+  "exclude_patterns": ["^~/Documents/SecondBrain/(Daily|Weekly)/"]
+}
+```
+
+or by setting `MARKDOWN_FIXER_HOOK=1` in the environment that runs Claude
+Code. Setting `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config
+file. A malformed config file forces it unarmed as well, even against a
+truthy env var — an unreadable config means the exclusion set is unknown, and
+running with silently-empty exclusions is the wrong direction to fail in.
+
+Run `markdown-fixer doctor` to see which route armed it (if any), what
+config file it's reading, and which exclusion patterns are active.
 
 ## How It Works
 
-### `pre-markdown-fix.py` (PreToolUse - Recommended)
+### `hook claude-code` (PreToolUse)
 
-- **Trigger:** Before Claude uses Write, Edit, or Obsidian MCP tools
+- **Trigger:** Before Claude uses Write, Edit, Update, or the Obsidian MCP
+  create/patch/append tools
 - **Purpose:** Clean markdown content before it's written to disk
 
 **What it does:**
 
-1. Receives JSON input about the tool that is about to be used
-2. Checks if the file is a markdown file (.md) OR if the content looks like markdown
-3. Runs markdown-fixer on the content
-4. Returns cleaned content via `updatedInput`
-
-**When it runs:**
-
-- Before Write, Edit, or Obsidian MCP tools execute
-- On .md files OR content that looks like markdown (heuristic detection)
-- Only if markdown-fixer is installed
-
-### Content Detection
-
-The hook uses heuristic detection to identify markdown content even when the file extension isn't `.md`. It looks for:
-
-- YAML frontmatter (`---`)
-- Markdown headers (`# Header`)
-- Bold text (`**bold**`)
-- Links (`[text](url)`)
-- Lists (unordered and ordered)
-- Code blocks (triple backticks)
-- Blockquotes (`> quote`)
-- Wiki-links (`[[link]]`)
-
-If 2 or more indicators are found, the content is treated as markdown.
+1. Receives a `PreToolUse` JSON payload on stdin
+2. Returns immediately, doing nothing, unless the hook is armed on this
+   machine
+3. Gates strictly on the file having a `.md` extension — content-based
+   sniffing was deliberately rejected because it false-positives on
+   `#`-commented code (shell, Python, YAML, Dockerfiles)
+4. Skips the file if its path matches one of the configured
+   `exclude_patterns` (each pattern is tested with `re.search`, against both
+   the literal path and its `~`-collapsed form)
+5. Runs markdown-fixer on the content; if the result differs, returns it via
+   `updatedInput`
+6. Always exits 0 — a hook failure must never block a write, so any error
+   along the way is swallowed and the original content passes through
+   untouched
 
 ### Hook Lifecycle
 
 1. **Claude prepares to write/edit** → Hook intercepts
-2. **Hook receives JSON** → Contains tool_name, tool_input with content
-3. **Hook checks content** → Is it a .md file or looks like markdown?
+2. **Hook receives JSON** → Contains `tool_name`, `tool_input` with content
+3. **Hook checks arming, extension, and exclusions**
 4. **Hook cleans content** → Runs markdown-fixer
-5. **Hook returns** → Returns `updatedInput` with cleaned content
+5. **Hook returns** → `updatedInput` with cleaned content, only if it changed
 6. **Tool executes** → Writes the already-cleaned content
 
 ### Input Format
@@ -93,6 +111,9 @@ The hook receives JSON via stdin:
 }
 ```
 
+The Obsidian MCP tools use `filename` instead of `file_path`; the hook checks
+both.
+
 ### Output Format
 
 If content is modified:
@@ -109,66 +130,69 @@ If content is modified:
 }
 ```
 
+If the content is unchanged, the hook prints nothing.
+
 ## Supported Tools
 
-The hook intercepts:
+The `matcher` regex above intercepts:
 
 - **Write** - Creating new files
 - **Edit** - Modifying existing files
+- **Update** - Modifying existing files (some clients use this name)
 - **mcp__obsidian-mcp-tools__create_vault_file** - Creating Obsidian notes
 - **mcp__obsidian-mcp-tools__patch_vault_file** - Modifying Obsidian notes
 - **mcp__obsidian-mcp-tools__append_to_vault_file** - Appending to Obsidian notes
 
-## Customization
+## Excluding Files
 
-Edit the hook script to customize behavior:
+Exclusions are regex patterns, not a script to edit. Add them to
+`exclude_patterns` in the config file, or add more at the environment level
+with `MARKDOWN_FIXER_EXCLUDE_PATTERNS` (a JSON array of regex strings — these
+add to the config's patterns, they don't replace them):
 
-**Add verbose output:**
-
-```python
-if cleaned and cleaned != content:
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "allow",
-            "updatedInput": {"content": cleaned},
-            "additionalContext": f"Auto-fixed markdown formatting"
-        }
-    }))
+```bash
+export MARKDOWN_FIXER_EXCLUDE_PATTERNS='["^~/Documents/SecondBrain/(Daily|Weekly)/"]'
 ```
 
-**Exclude certain files:**
-
-```python
-if "CHANGELOG" in filename:
-    sys.exit(0)
-```
+An invalid regex is reported to stderr and skipped; it does not stop the
+other patterns from applying. `markdown-fixer doctor` lists every pattern,
+its source (config or env), and whether it compiled.
 
 ## Troubleshooting
 
 ### Hook Not Running
 
-1. Verify the script exists at the configured path
+1. Run `markdown-fixer doctor` and check the `hook` line — it reports
+   exactly what armed it, or why it did not arm
 
-2. Check settings.json has the hook configured correctly
+2. Check `~/.claude/settings.json` has the `PreToolUse` entry configured
+   correctly (see [Installation](#installation) above)
 
-3. Check markdown-fixer is installed:
+3. Check `markdown-fixer` is on `PATH` — the settings.json command resolves
+   it with `command -v`, same as your shell would
 
-   ```bash
-   python3 -c "from markdown_fixer import MarkdownFixer; print('OK')"
-   ```
+Note: `doctor` runs in your shell with your `PATH`, but Claude Code's hook
+subprocess inherits its parent process's environment instead, which can
+differ. `doctor` can't see that environment, only your own shell's.
 
 ### Testing Manually
 
 ```bash
-echo '{"tool_name": "Write", "tool_input": {"file_path": "test.md", "content": "# Header\ntext"}}' | python3 /path/to/pre-markdown-fix.py
+echo '{"tool_name": "Write", "tool_input": {"file_path": "test.md", "content": "# Header\ntext"}}' | markdown-fixer hook claude-code
 ```
+
+Nothing will print unless the hook is armed (see Step 3 above) and the
+content actually changes.
 
 ### Enable/Disable
 
-To disable: Remove the PreToolUse hooks section from `~/.claude/settings.json`
+To disable everywhere: remove the `PreToolUse` entry from
+`~/.claude/settings.json`.
 
-To re-enable: Add the hooks configuration back
+To disable on just one machine while keeping the settings.json entry
+(identical on every machine) intact: set `hook_enabled` to `false` (or
+delete it) in that machine's config file, and don't set
+`MARKDOWN_FIXER_HOOK=1`. `MARKDOWN_FIXER_HOOK=0` forces it off unconditionally.
 
 ## See Also
 

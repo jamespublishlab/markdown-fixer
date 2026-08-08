@@ -96,14 +96,20 @@ Claude: [Uses markdown-fixer tool]
    - Mac: Press `Command + Space`, type `terminal`, press Enter
    - Windows: Press Windows key, type `cmd`, press Enter
 
-2. **For Mac**, copy this command:
+2. **For Mac**, `cd` into the `markdown-fixer-main` folder you put on your Desktop in Step 1, then run:
    ```bash
-   pip3 install --user markdown-fixer
+   cd ~/Desktop/markdown-fixer-main
+   chmod +x scripts/install-all.sh scripts/build-zipapp.sh
+   ./scripts/install-all.sh --cli
    ```
+   (The `chmod` line makes the downloaded scripts runnable — ZIP downloads
+   don't always keep that permission. It's safe to run even if they're
+   already runnable.) This builds the tool and installs it to
+   `~/.local/bin/markdown-fixer`. You'll see a few checkmarks scroll by.
 
    **For Windows**, copy this command:
    ```bash
-   pip install --user markdown-fixer
+   pip install git+https://github.com/jamespublishlab/markdown-fixer.git
    ```
 
 3. **Paste** it into the Terminal window (right-click → Paste, or Cmd+V / Ctrl+V)
@@ -115,8 +121,6 @@ Claude: [Uses markdown-fixer tool]
 6. When it's done, you'll see your prompt again (might say something like `~ %` or `C:\Users\YourName>`)
 
 7. **Don't close the Terminal yet!** We need it for one more step.
-
-**Note:** The `--user` flag installs markdown-fixer for your user account only (safer than system-wide install).
 
 ### Step 4: Find Your Claude Desktop Config File
 
@@ -171,20 +175,21 @@ Claude: [Uses markdown-fixer tool]
 
 **Copy this entire block:**
 
-**For Mac**, copy this:
+**For Mac**, copy this — but first replace `YOUR_USERNAME` with your actual Mac username (the name you see when you open Terminal, before the `$`):
 ```json
 {
   "mcpServers": {
     "markdown-fixer": {
-      "command": "python3",
-      "args": [
-        "-m",
-        "markdown_fixer.mcp_server"
-      ]
+      "command": "/Users/YOUR_USERNAME/.local/bin/markdown-fixer",
+      "args": ["mcp-server"]
     }
   }
 }
 ```
+
+**Why the full path?** Claude Desktop doesn't look in the same places your
+Terminal does, so it can't find a bare `markdown-fixer` command on its own —
+it needs the exact, full location of the program.
 
 **For Windows**, copy this:
 ```json
@@ -223,8 +228,8 @@ Claude: [Uses markdown-fixer tool]
          ...
        },
        "markdown-fixer": {
-         "command": "python3",
-         "args": ["-m", "markdown_fixer.mcp_server"]
+         "command": "/Users/YOUR_USERNAME/.local/bin/markdown-fixer",
+         "args": ["mcp-server"]
        }
      }
    }
@@ -275,31 +280,32 @@ If Claude says it can't find the tool, see **Troubleshooting** below.
 
 ### "Claude says it can't find markdown-fixer"
 
-**Check if it's installed:**
+**On Mac:**
 
-1. Open Terminal/Command Prompt
-2. Type: `pip3 show markdown-fixer` (or `pip show markdown-fixer` on Windows)
-3. If you see "not found", run: `pip3 install markdown-fixer` again
+1. Open Terminal
+2. Type: `ls -la ~/.local/bin/markdown-fixer`
+3. If you see "No such file or directory", go back to Step 3 and re-run `./scripts/install-all.sh --cli`
+4. If the file exists, double-check the `command` path in your config has your **exact** username and ends in `/.local/bin/markdown-fixer`, and that `"args"` is `["mcp-server"]`
 
-**Try the full path method:**
+**On Windows:**
 
-Instead of the config above, try this (find your exact path first):
-
-1. Open Terminal/Command Prompt
-2. Type: `which markdown-fixer` (Mac) or `where markdown-fixer` (Windows)
-3. Copy the path it shows
-4. Use that full path in the config:
-
-```json
-{
-  "mcpServers": {
-    "markdown-fixer": {
-      "command": "/full/path/to/markdown-fixer",
-      "args": []
-    }
-  }
-}
-```
+1. Open Command Prompt
+2. Type: `pip show markdown-fixer`
+3. If you see "not found", run: `pip install git+https://github.com/jamespublishlab/markdown-fixer.git` again
+4. If it's installed but Claude still can't find it, try the full path to Python instead of the bare `python` command:
+   1. Type: `where python`
+   2. Copy the path it shows
+   3. Use that full path as `"command"` in the config, keeping `"args": ["-m", "markdown_fixer.mcp_server"]` unchanged:
+   ```json
+   {
+     "mcpServers": {
+       "markdown-fixer": {
+         "command": "C:\\full\\path\\to\\python.exe",
+         "args": ["-m", "markdown_fixer.mcp_server"]
+       }
+     }
+   }
+   ```
 
 ### "The file is called claude_desktop_config.json.txt"
 
@@ -369,7 +375,7 @@ A: No. Once set up, it stays set up.
 A: Yes! Just delete the `markdown-fixer` section from the config file.
 
 **Q: What if I use Linux?**
-A: See the [full MCP guide](integrations/mcp-server/README.md) - it's more technical.
+A: See the [full MCP guide](../integrations/mcp-server/README.md) - it's more technical.
 
 **Q: This is too complicated! Is there an easier way?**
 A: Not yet, but we're working on it! For now, this is the simplest method.

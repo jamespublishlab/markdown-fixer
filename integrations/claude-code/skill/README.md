@@ -16,10 +16,14 @@ This skill enables Claude Code to:
 ### 1. Install markdown-fixer
 
 ```bash
-pipx install git+https://github.com/jamespublishlab/markdown-fixer.git
-# or
-pip install git+https://github.com/jamespublishlab/markdown-fixer.git
+git clone https://github.com/jamespublishlab/markdown-fixer
+cd markdown-fixer
+./scripts/install-all.sh --cli     # builds and installs ~/.local/bin/markdown-fixer
 ```
+
+`pip install .` still works as an alternative (required if you also want
+`python -m markdown_fixer.mcp_server`). On Linux, build with
+`scripts/build-zipapp.sh` instead — `install-all.sh` is macOS-only.
 
 ### 2. Install the Skill Globally
 
@@ -97,7 +101,7 @@ Make sure:
 ### markdown-fixer Not Installed
 
 ```bash
-pipx install markdown-fixer
+./scripts/install-all.sh --cli
 ```
 
 Verify:
