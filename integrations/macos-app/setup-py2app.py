@@ -17,8 +17,8 @@ OPTIONS = {
     'plist': {
         'CFBundleName': 'Markdown Fixer',
         'CFBundleDisplayName': 'Markdown Fixer',
-        'CFBundleShortVersionString': '1.0.0',
-        'CFBundleVersion': '1.0.0',
+        'CFBundleShortVersionString': '1.2.0',
+        'CFBundleVersion': '1.2.0',
         'CFBundleIdentifier': 'com.publishlab.markdown-fixer',
         'NSHumanReadableCopyright': 'Copyright © 2025 James. All rights reserved.',
         'CFBundleDocumentTypes': [
