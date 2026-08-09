@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from .__version__ import __version__
+from .config import fix_options, load_config
 from .core import MarkdownFixer
 
 DESCRIPTION = """Fix markdown formatting issues.
@@ -69,7 +70,7 @@ def fix_files(args):
             print(f"Error: file not found: {filepath}", file=sys.stderr)
             return 1
 
-    fixer = MarkdownFixer()
+    fixer = MarkdownFixer(fix_options(load_config(), "explicit"))
 
     for filepath in args.files:
         path = Path(filepath)

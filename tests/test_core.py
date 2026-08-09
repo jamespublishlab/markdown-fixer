@@ -1004,3 +1004,110 @@ class TestHorizontalRuleGating:
         src = "Intro\n- a\n- b\n"
         result = MarkdownFixer({"strip_horizontal_rules": False}).fix_string(src)
         assert "Intro\n\n- a" in result, "list spacing fix should still apply"
+
+
+class TestFixToggles:
+    """Every manipulation is individually gateable.
+
+    Library/CLI default is True for all five, so explicit invocation is
+    unchanged. The automatic write paths (hook, MCP server) pass a
+    conservative set: whitespace hygiene on, anything that restructures
+    visible content off. See config.Config for those defaults.
+    """
+
+    def test_all_default_on(self):
+        f = MarkdownFixer()
+        for attr in (
+            "strip_horizontal_rules",
+            "reflow_tables",
+            "bullet_field_metadata",
+            "blank_lines_around_blocks",
+            "collapse_blank_runs",
+        ):
+            assert getattr(f, attr) is True, f"{attr} should default True"
+
+    # --- reflow_tables ---------------------------------------------------
+    TABLE = "| a | b |\n|:--|:--|\n| longer cell | x |"
+
+    def test_tables_reflowed_by_default(self):
+        out = MarkdownFixer().fix_string(self.TABLE)
+        assert "| a           |" in out, "table was not padded"
+
+    def test_reflow_tables_false_leaves_rows_verbatim(self):
+        out = MarkdownFixer({"reflow_tables": False}).fix_string(self.TABLE)
+        assert "| a | b |" in out
+        assert "| longer cell | x |" in out
+
+    # --- bullet_field_metadata -------------------------------------------
+    FIELDS = "**Name:** John\n**Age:** 30\n"
+
+    def test_field_metadata_bulleted_by_default(self):
+        out = MarkdownFixer().fix_string(self.FIELDS)
+        assert "- **Name:** John" in out
+
+    def test_bullet_field_metadata_false_leaves_lines_alone(self):
+        out = MarkdownFixer({"bullet_field_metadata": False}).fix_string(self.FIELDS)
+        assert "**Name:** John" in out
+        assert "- **Name:** John" not in out
+
+    # --- blank_lines_around_blocks ---------------------------------------
+    TIGHT = "Intro\n- a\n- b"
+
+    def test_blank_lines_added_by_default(self):
+        assert "Intro\n\n- a" in MarkdownFixer().fix_string(self.TIGHT)
+
+    def test_blank_lines_around_blocks_false_keeps_it_tight(self):
+        out = MarkdownFixer({"blank_lines_around_blocks": False}).fix_string(self.TIGHT)
+        assert "Intro\n- a" in out
+
+    # --- collapse_blank_runs ---------------------------------------------
+    GAPPY = "One\n\n\n\n\nTwo\n"
+
+    def test_blank_runs_collapsed_by_default(self):
+        assert "One\n\nTwo" in MarkdownFixer().fix_string(self.GAPPY)
+
+    def test_collapse_blank_runs_false_preserves_the_gap(self):
+        out = MarkdownFixer({"collapse_blank_runs": False}).fix_string(self.GAPPY)
+        assert "One\n\n\n\n\nTwo" in out
+
+    # --- everything off ---------------------------------------------------
+    def test_all_off_is_a_no_op(self):
+        src = "Intro\n- a\n- b\n\n---\n\n| a | b |\n|:--|:--|\n| c | d |\n"
+        off = {
+            k: False
+            for k in (
+                "strip_horizontal_rules",
+                "reflow_tables",
+                "bullet_field_metadata",
+                "blank_lines_around_blocks",
+                "collapse_blank_runs",
+            )
+        }
+        assert MarkdownFixer(off).fix_string(src) == src
+
+
+class TestBlankLinesAfterBlocks:
+    """The `blank_lines_around_blocks` gate must cover the AFTER cases too.
+
+    ensure_blank_before() handles the leading side, but two sites add a blank
+    line *after* a block (code fence exit, list exit) and are reached directly.
+    Gating only the closure would leave the fixer still mutating whitespace
+    with the toggle off.
+    """
+
+    AFTER_FENCE = "```\ncode\n```\nAfter the fence"
+    AFTER_LIST = "- a\n- b\nAfter the list"
+
+    def test_blank_added_after_fence_by_default(self):
+        assert "```\n\nAfter" in MarkdownFixer().fix_string(self.AFTER_FENCE)
+
+    def test_blank_added_after_list_by_default(self):
+        assert "- b\n\nAfter" in MarkdownFixer().fix_string(self.AFTER_LIST)
+
+    def test_no_blank_after_fence_when_gated_off(self):
+        out = MarkdownFixer({"blank_lines_around_blocks": False}).fix_string(self.AFTER_FENCE)
+        assert out == self.AFTER_FENCE
+
+    def test_no_blank_after_list_when_gated_off(self):
+        out = MarkdownFixer({"blank_lines_around_blocks": False}).fix_string(self.AFTER_LIST)
+        assert out == self.AFTER_LIST

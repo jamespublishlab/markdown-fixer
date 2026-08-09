@@ -78,13 +78,23 @@ either with `~/.config/markdown-fixer/config.json`:
 }
 ```
 
-`strip_horizontal_rules` **defaults to `false`** on the hook and MCP server,
-which is the opposite of the CLI. Removing a `---` is a structural edit to a
-document handed to another tool, not to the formatter, and it silently breaks
-any format that uses rules as section separators — Obsidian WIP notes, specs
-with `---` between sections. Set it to `true` to opt back in. The CLI
-(`markdown-fixer file.md`) still strips rules, because there the reformatting
-is what you explicitly asked for.
+**Every manipulation has its own key, and defaults differ by surface.** A key's
+*presence* makes it global; its *absence* leaves each surface to its own default:
+
+| Fix | hook | cli/mcp |
+|:--|:--|:--|
+| `blank_lines_around_blocks` | on | on |
+| `collapse_blank_runs` | on | on |
+| `bullet_field_metadata` | **off** | on |
+| `reflow_tables` | **off** | on |
+| `strip_horizontal_rules` | **off** | on |
+
+The hook fires automatically on writes Claude makes, so it does whitespace
+hygiene only — anything that restructures or deletes visible content is opt-in.
+The CLI and the MCP tools are direct requests to reformat, so they run
+everything. Setting a key in the config applies it to every surface.
+
+Run `markdown-fixer doctor` to see how each fix resolves on each surface.
 
 or with the environment variable `MARKDOWN_FIXER_HOOK=1`. Setting
 `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config file. Run

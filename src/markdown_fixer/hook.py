@@ -11,7 +11,7 @@ Returns 0 on every path. This hook must never block a write.
 import json
 import sys
 
-from .config import compile_patterns, is_armed, is_excluded, load_config
+from .config import compile_patterns, fix_options, is_armed, is_excluded, load_config
 
 
 def run(stdin=None, stdout=None):
@@ -57,9 +57,7 @@ def run(stdin=None, stdout=None):
     try:
         from .core import MarkdownFixer
 
-        cleaned = MarkdownFixer({"strip_horizontal_rules": cfg.strip_horizontal_rules}).fix_string(
-            content
-        )
+        cleaned = MarkdownFixer(fix_options(cfg, "hook")).fix_string(content)
     except Exception:  # noqa: BLE001
         # Any failure passes the write through untouched.
         return 0

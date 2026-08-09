@@ -231,16 +231,29 @@ class TestStripHorizontalRulesReporting:
     `---` survive / vanish?".
     """
 
-    def test_reports_preserved_by_default(self, home):
+    def test_lists_every_fix_for_both_surfaces(self, home):
         write_config(home, {"hook_enabled": True})
         code, text = report_text()
         assert code == 0
-        assert "horizontal rules" in text
-        assert "preserved" in text
+        for key in (
+            "blank_lines_around_blocks",
+            "collapse_blank_runs",
+            "bullet_field_metadata",
+            "reflow_tables",
+            "strip_horizontal_rules",
+        ):
+            assert key in text, f"{key} missing from doctor output"
+        assert "hook" in text and "cli/mcp" in text
 
-    def test_reports_stripped_when_opted_in(self, home):
-        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": True})
-        code, text = report_text()
-        assert code == 0
-        assert "horizontal rules" in text
-        assert "stripped" in text
+    def test_shows_the_surfaces_differing_by_default(self, home):
+        """The whole point of per-surface defaults is visible here."""
+        write_config(home, {"hook_enabled": True})
+        _, text = report_text()
+        row = next(l for l in text.splitlines() if "bullet_field_metadata" in l)
+        assert "off" in row and "on" in row, f"expected differing surfaces: {row!r}"
+
+    def test_marks_an_explicit_override_as_global(self, home):
+        write_config(home, {"hook_enabled": True, "reflow_tables": True})
+        _, text = report_text()
+        row = next(l for l in text.splitlines() if "reflow_tables" in l)
+        assert "config" in row, f"override not attributed: {row!r}"

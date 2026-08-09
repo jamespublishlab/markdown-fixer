@@ -8,18 +8,24 @@ Config lives at $XDG_CONFIG_HOME/markdown-fixer/config.json, falling back to
     {
       "hook_enabled": true,
       "exclude_patterns": ["(^|/)(Daily|Weekly)/"],
-      "strip_horizontal_rules": false
+      "reflow_tables": false
     }
 
 The config file — not settings.json — is the durable arming signal, so the
 Claude Code hook line can stay byte-identical on every machine.
 
-strip_horizontal_rules defaults to False here, the opposite of the library and
-CLI default. The hook and MCP server rewrite documents the user handed to
-another tool, not to the formatter, so removing a `---` is a structural edit
-they did not ask for -- and it silently breaks any format using rules as
-section separators. Explicit CLI invocation is different: there the
-reformatting is the request.
+Every manipulation the fixer performs has its own key. A key's PRESENCE makes
+it global -- it applies to every surface. Its ABSENCE leaves each surface to
+its own default:
+
+  hook      fires automatically on writes Claude makes. Whitespace hygiene
+            only; anything that restructures or deletes visible content is
+            opt-in.
+  cli/mcp   `markdown-fixer file.md`, and the MCP tools ("fix this markdown").
+            Both are direct requests to reformat, so they run everything.
+
+Run `markdown-fixer doctor` to see how each fix resolves on each surface, and
+whether it came from the config or a default.
 
 Write patterns to match every path shape the hook can see: Write supplies
 an absolute path, but the Obsidian MCP tools supply a path relative to the
@@ -46,7 +52,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 from typing import Pattern as RePattern
 
 HOOK_ENV_VAR = "MARKDOWN_FIXER_HOOK"
@@ -80,8 +86,26 @@ class Config:
     path: Optional[Path] = None
     hook_enabled: bool = False
     raw_patterns: List[str] = field(default_factory=list)
-    strip_horizontal_rules: bool = False
     malformed: bool = False
+    # Only the toggles explicitly set in the file. A key here applies to
+    # every surface; anything absent falls to that surface's default.
+    fix_overrides: Dict[str, bool] = field(default_factory=dict)
+
+    # One key per manipulation the fixer performs. These are the defaults for
+    # the AUTOMATIC write paths (hook, MCP server) -- MarkdownFixer's own
+    # defaults are all True, so the library and CLI are unaffected.
+    #
+    # The split: whitespace hygiene is invisible and safe to apply to a
+    # document the user handed to another tool. Anything that restructures or
+    # deletes visible content is opt-in. bullet_field_metadata is off despite
+    # being the tool's headline feature -- it is the exact code path that
+    # silently ate prose for months, and an automatic path is the wrong place
+    # to run it unasked.
+    blank_lines_around_blocks: bool = True
+    collapse_blank_runs: bool = True
+    bullet_field_metadata: bool = False
+    reflow_tables: bool = False
+    strip_horizontal_rules: bool = False
 
 
 def config_path():
@@ -103,6 +127,57 @@ def collapse_home(path):
     if path.startswith(home + os.sep):
         return "~" + path[len(home) :]
     return path
+
+
+# One key per manipulation the fixer performs, with per-surface defaults.
+#
+# A key's PRESENCE in the config file makes it global -- it applies to every
+# surface. Its ABSENCE leaves each surface to its own default:
+#
+#   hook      the PreToolUse hook, which fires automatically on writes Claude
+#             makes. Whitespace hygiene only; anything that restructures or
+#             deletes visible content is opt-in.
+#   explicit  the CLI and the MCP server. Both are direct requests to reformat
+#             -- `markdown-fixer file.md`, or asking Claude Desktop to "fix
+#             this markdown" -- so they run everything.
+FIX_DEFAULTS_HOOK = {
+    "blank_lines_around_blocks": True,
+    "collapse_blank_runs": True,
+    "bullet_field_metadata": False,
+    "reflow_tables": False,
+    "strip_horizontal_rules": False,
+}
+
+FIX_DEFAULTS_EXPLICIT = {name: True for name in FIX_DEFAULTS_HOOK}
+
+SURFACES = {"hook": FIX_DEFAULTS_HOOK, "explicit": FIX_DEFAULTS_EXPLICIT}
+
+# Keep Config's field defaults in sync with FIX_DEFAULTS_HOOK -- Config's
+# resolved fields are the hook's view, which is what doctor reports.
+FIX_KEYS = tuple(FIX_DEFAULTS_HOOK)
+
+
+def _fix_overrides(data, path):
+    """Collect explicitly-set fix toggles. Absent or invalid keys are omitted.
+
+    Omitting a bad value (rather than substituting a fallback) is deliberate:
+    recording it as an override would silently pin EVERY surface to that
+    fallback, which is a larger effect than the typo deserves.
+    """
+    overrides = {}
+    for name in FIX_KEYS:
+        if name not in data:
+            continue
+        value = data[name]
+        if not isinstance(value, bool):
+            print(
+                f"markdown-fixer: config {path}: {name} must be true or false, got "
+                f"{type(value).__name__}; ignoring it",
+                file=sys.stderr,
+            )
+            continue
+        overrides[name] = value
+    return overrides
 
 
 def load_config():
@@ -149,24 +224,32 @@ def load_config():
             )
             return Config(path=path, malformed=True)
 
-    # Absent means False: not stripping is the safe direction, and a bad value
-    # here cannot shrink protection the way a bad exclude_patterns entry can,
-    # so it warns and falls back rather than marking the config malformed.
-    strip_rules = data.get("strip_horizontal_rules", False)
-    if not isinstance(strip_rules, bool):
-        print(
-            f"markdown-fixer: config {path}: strip_horizontal_rules must be true or "
-            f"false, got {type(strip_rules).__name__}; treating it as false",
-            file=sys.stderr,
-        )
-        strip_rules = False
+    # A bad value in any fix toggle cannot shrink protection the way a bad
+    # exclude_patterns entry can, so it warns and is ignored rather than
+    # marking the config malformed.
+    overrides = _fix_overrides(data, path)
 
     return Config(
         path=path,
         hook_enabled=data.get("hook_enabled") is True,
         raw_patterns=list(exclude_patterns),
-        strip_horizontal_rules=strip_rules,
+        fix_overrides=overrides,
+        # The resolved hook view, which is what doctor reports.
+        **{**FIX_DEFAULTS_HOOK, **overrides},
     )
+
+
+def fix_options(cfg, surface):
+    """The MarkdownFixer config dict for one surface.
+
+    Every caller builds it from here, so a new toggle cannot be wired into one
+    surface and forgotten in another. `surface` is "hook" or "explicit".
+    """
+    try:
+        defaults = SURFACES[surface]
+    except KeyError:
+        raise ValueError(f"unknown surface {surface!r}; expected one of {sorted(SURFACES)}")
+    return {**defaults, **cfg.fix_overrides}
 
 
 def _env_flag(name):

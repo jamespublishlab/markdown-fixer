@@ -54,17 +54,32 @@ class MarkdownFixer:
         Initialize the markdown fixer.
 
         Args:
-            config: Optional configuration dict. Recognised keys:
-                strip_horizontal_rules (bool, default True) -- remove `---`,
-                    `***` and `___` rules from the body. Defaults True so the
-                    library and CLI are unchanged, but the automatic write
-                    paths (the PreToolUse hook and the MCP server) pass False
-                    unless the machine config opts in: removing a rule is a
-                    structural edit to a document the caller did not hand over
-                    for reformatting, and it silently breaks formats that use
-                    `---` as a section separator.
+            config: Optional configuration dict. Every manipulation the fixer
+                performs has its own key, and all of them default True here so
+                the library and CLI are unchanged -- an explicit
+                `markdown-fixer file.md` IS a request to reformat.
+
+                The automatic write paths (the PreToolUse hook and the MCP
+                server) pass a conservative set instead, because they rewrite
+                documents handed to another tool, not to the formatter. See
+                config.Config for those defaults. The split is: whitespace
+                hygiene is invisible and safe to apply unasked; anything that
+                restructures or deletes visible content is opt-in.
+
+                blank_lines_around_blocks -- blank line before/after lists,
+                    headings, code fences, tables and standalone images.
+                collapse_blank_runs -- collapse 3+ newlines to one blank line.
+                bullet_field_metadata -- turn 2+ consecutive `**Key:** value`
+                    lines into a bulleted list.
+                reflow_tables -- pad every cell to its column width.
+                strip_horizontal_rules -- delete `---`, `***` and `___` rules
+                    from the body (frontmatter is preserved separately).
         """
         self.config = config or {}
+        self.blank_lines_around_blocks = self.config.get("blank_lines_around_blocks", True)
+        self.collapse_blank_runs = self.config.get("collapse_blank_runs", True)
+        self.bullet_field_metadata = self.config.get("bullet_field_metadata", True)
+        self.reflow_tables = self.config.get("reflow_tables", True)
         self.strip_horizontal_rules = self.config.get("strip_horizontal_rules", True)
 
     def fix_file(
@@ -145,6 +160,8 @@ class MarkdownFixer:
 
         def ensure_blank_before():
             """Add blank line before current element if needed."""
+            if not self.blank_lines_around_blocks:
+                return
             if result and result[-1].strip():
                 result.append("")
 
@@ -193,7 +210,7 @@ class MarkdownFixer:
             # Add blank line after block element if followed by content
             if just_exited_block:
                 just_exited_block = False
-                if line.strip():  # Non-blank line after block
+                if self.blank_lines_around_blocks and line.strip():
                     result.append("")
 
             # Check if this is a heading
@@ -235,8 +252,9 @@ class MarkdownFixer:
 
                 # Extract and format the entire table
                 table_lines, table_end_idx = self._extract_table(lines, i)
-                formatted_table = self._format_table(table_lines)
-                result.extend(formatted_table)
+                result.extend(
+                    self._format_table(table_lines) if self.reflow_tables else table_lines
+                )
                 # Mark that next content needs blank line before it
                 just_exited_block = True
                 i = table_end_idx + 1
@@ -256,7 +274,7 @@ class MarkdownFixer:
                 continue
 
             # Check if this is field-style metadata
-            if self._is_field_metadata(line):
+            if self.bullet_field_metadata and self._is_field_metadata(line):
                 # Extract the field and value - try all patterns
                 stripped = line.strip()
                 # Try **Key:** value (colon inside bold)
@@ -293,7 +311,7 @@ class MarkdownFixer:
             elif not is_list_line and in_list:
                 # Ending a list - ensure blank line after
                 in_list = False
-                if line.strip():  # Only add blank if next line isn't already blank
+                if self.blank_lines_around_blocks and line.strip():
                     result.append("")
                 result.append(line)
 
@@ -311,7 +329,8 @@ class MarkdownFixer:
         formatted = "\n".join(result)
 
         # Collapse 3+ consecutive newlines to exactly 2 (one blank line)
-        formatted = re.sub(r"\n{3,}", "\n\n", formatted)
+        if self.collapse_blank_runs:
+            formatted = re.sub(r"\n{3,}", "\n\n", formatted)
 
         # Re-attach frontmatter
         if frontmatter:

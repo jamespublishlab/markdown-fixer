@@ -297,3 +297,133 @@ class TestStripHorizontalRules:
         cfg = cfgmod.load_config()
         assert cfg.malformed is False
         assert cfgmod.is_armed(cfg) is True
+
+
+class TestFixToggleDefaults:
+    """The automatic write paths get a conservative default set.
+
+    Whitespace hygiene is invisible and safe to apply to a document the user
+    handed to another tool. Anything that restructures or deletes visible
+    content is opt-in -- including bullet_field_metadata, which is the exact
+    code path that silently ate prose for months.
+    """
+
+    HYGIENE = ("blank_lines_around_blocks", "collapse_blank_runs")
+    RESTRUCTURING = ("bullet_field_metadata", "reflow_tables", "strip_horizontal_rules")
+
+    def test_hygiene_defaults_on(self, home):
+        write_config(home, {"hook_enabled": True})
+        cfg = cfgmod.load_config()
+        for key in self.HYGIENE:
+            assert getattr(cfg, key) is True, f"{key} should default True"
+
+    def test_restructuring_defaults_off(self, home):
+        write_config(home, {"hook_enabled": True})
+        cfg = cfgmod.load_config()
+        for key in self.RESTRUCTURING:
+            assert getattr(cfg, key) is False, f"{key} should default False"
+
+    def test_each_key_is_honoured_both_ways(self, home):
+        for key in self.HYGIENE + self.RESTRUCTURING:
+            for value in (True, False):
+                write_config(home, {"hook_enabled": True, key: value})
+                assert getattr(cfgmod.load_config(), key) is value, f"{key}={value} ignored"
+
+    def test_no_config_file_uses_the_same_defaults(self, home):
+        cfg = cfgmod.load_config()
+        assert all(getattr(cfg, k) is True for k in self.HYGIENE)
+        assert all(getattr(cfg, k) is False for k in self.RESTRUCTURING)
+
+    def test_non_bool_warns_and_falls_back_to_that_key_default(self, home, capsys):
+        """Fallback is the KEY's default, not a blanket False.
+
+        A typo in a hygiene key must not silently turn that fix off.
+        """
+        write_config(
+            home, {"hook_enabled": True, "blank_lines_around_blocks": "yes", "reflow_tables": 1}
+        )
+        cfg = cfgmod.load_config()
+        err = capsys.readouterr().err
+        assert cfg.blank_lines_around_blocks is True, "hygiene key fell back to False"
+        assert cfg.reflow_tables is False
+        assert "blank_lines_around_blocks" in err and "reflow_tables" in err
+
+    def test_non_bool_does_not_mark_the_config_malformed(self, home):
+        write_config(home, {"hook_enabled": True, "reflow_tables": "nope"})
+        cfg = cfgmod.load_config()
+        assert cfg.malformed is False
+        assert cfgmod.is_armed(cfg) is True
+
+
+class TestFixDefaultsDoNotDrift:
+    """FIX_DEFAULTS (what the parser reads) and Config's field defaults (what
+    the dataclass documents) are two copies of the same fact. They must agree,
+    or a key silently gets one default when the file is absent and another
+    when it is present."""
+
+    def test_every_fix_default_matches_the_dataclass(self):
+        empty = cfgmod.Config()
+        for name, default in cfgmod.FIX_DEFAULTS_HOOK.items():
+            assert (
+                getattr(empty, name) is default
+            ), f"{name}: FIX_DEFAULTS says {default}, Config says {getattr(empty, name)}"
+
+    def test_dataclass_has_no_unlisted_fix_keys(self):
+        """A new toggle added to Config but not FIX_DEFAULTS would never parse."""
+        known = set(cfgmod.FIX_DEFAULTS_HOOK) | {
+            "path",
+            "hook_enabled",
+            "raw_patterns",
+            "malformed",
+            "fix_overrides",
+        }
+        actual = set(cfgmod.Config().__dataclass_fields__)
+        assert actual == known, f"unlisted Config fields: {actual - known}"
+
+
+class TestPerSurfaceDefaults:
+    """A key's PRESENCE makes it global; its ABSENCE leaves each surface to its
+    own default.
+
+    The hook fires automatically on writes Claude makes, so it is conservative.
+    The CLI and the MCP server are both explicit requests to reformat --
+    `markdown-fixer file.md`, or asking Claude Desktop to "fix this markdown" --
+    so they run everything. Setting a key in config overrides both.
+    """
+
+    def test_absent_keys_give_each_surface_its_own_default(self, home):
+        write_config(home, {"hook_enabled": True})
+        cfg = cfgmod.load_config()
+        hook = cfgmod.fix_options(cfg, "hook")
+        explicit = cfgmod.fix_options(cfg, "explicit")
+
+        assert hook["bullet_field_metadata"] is False
+        assert hook["reflow_tables"] is False
+        assert hook["blank_lines_around_blocks"] is True
+
+        assert all(
+            explicit[k] is True for k in cfgmod.FIX_DEFAULTS_EXPLICIT
+        ), "explicit surfaces should run every fix when nothing is configured"
+
+    def test_a_present_key_applies_to_every_surface(self, home):
+        write_config(home, {"hook_enabled": True, "reflow_tables": False})
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["reflow_tables"] is False
+        assert cfgmod.fix_options(cfg, "explicit")["reflow_tables"] is False
+
+    def test_a_present_true_turns_it_on_for_the_hook_too(self, home):
+        write_config(home, {"hook_enabled": True, "bullet_field_metadata": True})
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["bullet_field_metadata"] is True
+        assert cfgmod.fix_options(cfg, "explicit")["bullet_field_metadata"] is True
+
+    def test_only_explicitly_set_keys_are_recorded_as_overrides(self, home):
+        write_config(home, {"hook_enabled": True, "reflow_tables": False})
+        assert cfgmod.load_config().fix_overrides == {"reflow_tables": False}
+
+    def test_bad_value_is_not_recorded_as_an_override(self, home):
+        """A junk value must not silently pin every surface to the fallback."""
+        write_config(home, {"hook_enabled": True, "reflow_tables": "nope"})
+        cfg = cfgmod.load_config()
+        assert cfg.fix_overrides == {}
+        assert cfgmod.fix_options(cfg, "explicit")["reflow_tables"] is True

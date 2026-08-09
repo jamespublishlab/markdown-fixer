@@ -16,6 +16,8 @@ from pathlib import Path
 
 from .__version__ import __version__
 from .config import (
+    FIX_KEYS,
+    fix_options,
     CONFIG_HOME_ENV_VAR,
     HOOK_ENV_VAR,
     PATTERNS_ENV_VAR,
@@ -103,11 +105,20 @@ def report(stdout=None):
             lines.append(f"{label} {pattern.raw}   {status}   [{pattern.source}]")
             label = "            "
 
-    # This changes what the hook does to every file it touches, so it belongs
-    # in the report -- otherwise the one diagnostic tool cannot answer
-    # "why did my --- survive / vanish?".
-    rules = "stripped" if cfg.strip_horizontal_rules else "preserved"
-    lines.append(f"horizontal rules   {rules}   [strip_horizontal_rules]")
+    # Each fix resolves differently per surface now, so reporting one value
+    # would be actively misleading -- the diagnostic tool has to answer
+    # "why did my --- survive here but vanish there?".
+    hook_opts = fix_options(cfg, "hook")
+    cli_opts = fix_options(cfg, "explicit")
+    lines.append("")
+    lines.append(f"fixes        {'':<26} {'hook':<6} {'cli/mcp':<8} source")
+    for name in FIX_KEYS:
+        source = "config" if name in cfg.fix_overrides else "default"
+        lines.append(
+            f"             {name:<26} "
+            f"{('on' if hook_opts[name] else 'off'):<6} "
+            f"{('on' if cli_opts[name] else 'off'):<8} {source}"
+        )
 
     lines.append("")
     lines.append("note         doctor sees THIS shell's PATH. Hooks and MCP servers inherit")

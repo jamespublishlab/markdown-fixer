@@ -50,7 +50,7 @@ The hook is **opt-in**. It does nothing until armed on that machine, either by
 {
   "hook_enabled": true,
   "exclude_patterns": ["(^|/)(Daily|Weekly)/"],
-  "strip_horizontal_rules": false
+  "reflow_tables": false
 }
 ```
 

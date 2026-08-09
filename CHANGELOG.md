@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `strip_horizontal_rules` config key. Gates removal of `---`, `***` and `___` rules. **Defaults to `false` on the hook and MCP server** — the automatic write paths — because removing a rule is a structural edit to a document handed to another tool, not to the formatter, and it silently breaks formats that use rules as section separators. The CLI and library keep the previous behaviour (rules stripped), since there the reformatting is what you explicitly asked for.
-- `doctor` now reports the resolved rule-stripping state, so "why did my `---` survive / vanish?" is answerable.
+- **Every manipulation the fixer performs is now individually config-gated**, with defaults that differ by surface: `blank_lines_around_blocks`, `collapse_blank_runs`, `bullet_field_metadata`, `reflow_tables`, `strip_horizontal_rules`.
+- A key's **presence** in the config makes it global; its **absence** leaves each surface to its own default. The **hook** fires automatically on writes Claude makes, so it defaults to whitespace hygiene only — `bullet_field_metadata`, `reflow_tables` and `strip_horizontal_rules` are all off. The **CLI and MCP server** are direct requests to reformat, so they default to running everything, unchanged from before.
+- `doctor` now prints a per-fix, per-surface table with the source of each value (`config` or `default`), so "why did my `---` survive here but vanish there?" is answerable.
+
+### Changed
+- **The PreToolUse hook no longer bullets field metadata, reflows tables, or strips horizontal rules by default.** It still normalises blank lines around blocks and collapses blank runs. This is a behaviour change for anyone with the hook armed; set the corresponding keys to `true` to restore the previous behaviour. The library, CLI and MCP server are unaffected.
 
 ### Changed
 - **Recommended `PreToolUse` matcher narrowed to `^Write$|^mcp__obsidian-mcp-tools__(create|patch|append).*$`.** `Edit` and `Update` were listed and both were dead: the hook reads new content from `tool_input.content`, and `Edit` sends `old_string`/`new_string` instead, so it exits immediately and can never rewrite an edit — while `Update` is not a Claude Code tool at all. Editing an existing markdown file was never auto-fixed; the matcher advertised otherwise. The unanchored form also matched `NotebookEdit`, which would have routed notebook JSON through a markdown fixer.
