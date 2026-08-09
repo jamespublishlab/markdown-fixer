@@ -27,7 +27,7 @@ identical on every machine and contains no paths:
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|Update|mcp__obsidian-mcp-tools__(create|patch|append).*",
+        "matcher": "^Write$|^mcp__obsidian-mcp-tools__(create|patch|append).*$",
         "hooks": [
           {
             "type": "command",
@@ -49,7 +49,8 @@ The hook is **opt-in**. It does nothing until armed on that machine, either by
 ```json
 {
   "hook_enabled": true,
-  "exclude_patterns": ["(^|/)(Daily|Weekly)/"]
+  "exclude_patterns": ["(^|/)(Daily|Weekly)/"],
+  "strip_horizontal_rules": false
 }
 ```
 
@@ -88,8 +89,8 @@ config file it's reading, and which exclusion patterns are active.
 
 ### `hook claude-code` (PreToolUse)
 
-- **Trigger:** Before Claude uses Write, Edit, Update, or the Obsidian MCP
-  create/patch/append tools
+- **Trigger:** Before Claude uses `Write` or the Obsidian MCP
+  create/patch/append tools. **Not `Edit`** — see Supported Tools
 - **Purpose:** Clean markdown content before it's written to disk
 
 **What it does:**
@@ -158,9 +159,13 @@ If the content is unchanged, the hook prints nothing.
 
 The `matcher` regex above intercepts:
 
-- **Write** - Creating new files
-- **Edit** - Modifying existing files
-- **Update** - Modifying existing files (some clients use this name)
+- **Write** - Creating or fully overwriting a file
+
+`Edit` and `Update` were listed here previously and both were dead. The hook
+reads the new content from `tool_input.content`; `Edit` sends
+`old_string`/`new_string` instead, so the hook exits immediately and can
+never rewrite an edit. `Update` is not a Claude Code tool at all. **Editing
+an existing markdown file is never auto-fixed — only whole-file writes are.**
 - **mcp__obsidian-mcp-tools__create_vault_file** - Creating Obsidian notes
 - **mcp__obsidian-mcp-tools__patch_vault_file** - Modifying Obsidian notes
 - **mcp__obsidian-mcp-tools__append_to_vault_file** - Appending to Obsidian notes

@@ -46,7 +46,7 @@ script to copy. Add this line to your `~/.claude/settings.json` under
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|Update|mcp__obsidian-mcp-tools__(create|patch|append).*",
+        "matcher": "^Write$|^mcp__obsidian-mcp-tools__(create|patch|append).*$",
         "hooks": [
           {
             "type": "command",
@@ -59,15 +59,32 @@ script to copy. Add this line to your `~/.claude/settings.json` under
 }
 ```
 
+**The matcher lists `Write` only, and that is not an oversight.** The hook
+reads the new file content from `tool_input.content`. `Write` carries that key;
+`Edit` does not — it sends `old_string`/`new_string` — so the hook exits
+immediately on every edit and can never rewrite one. Listing `Edit` in the
+matcher advertised a capability the code cannot deliver. **Editing an existing
+markdown file is therefore never auto-fixed; only whole-file writes are.**
+(`Update` was listed too and is not a tool in Claude Code at all.)
+
 The hook is **opt-in**: this line alone does nothing. Arm it per machine,
 either with `~/.config/markdown-fixer/config.json`:
 
 ```json
 {
   "hook_enabled": true,
-  "exclude_patterns": ["(^|/)(Daily|Weekly)/"]
+  "exclude_patterns": ["(^|/)(Daily|Weekly)/"],
+  "strip_horizontal_rules": false
 }
 ```
+
+`strip_horizontal_rules` **defaults to `false`** on the hook and MCP server,
+which is the opposite of the CLI. Removing a `---` is a structural edit to a
+document handed to another tool, not to the formatter, and it silently breaks
+any format that uses rules as section separators — Obsidian WIP notes, specs
+with `---` between sections. Set it to `true` to opt back in. The CLI
+(`markdown-fixer file.md`) still strips rules, because there the reformatting
+is what you explicitly asked for.
 
 or with the environment variable `MARKDOWN_FIXER_HOOK=1`. Setting
 `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config file. Run
@@ -75,7 +92,7 @@ or with the environment variable `MARKDOWN_FIXER_HOOK=1`. Setting
 exclusion patterns it will apply.
 
 Write patterns to match **both** path shapes the matcher's tools can send:
-`Write`/`Edit` supply an absolute path, but the Obsidian MCP tools
+`Write` supplies an absolute path, but the Obsidian MCP tools
 (`mcp__obsidian-mcp-tools__…`) supply a path relative to the vault root
 instead (e.g. `Daily/x.md`, not `/Users/you/…/Daily/x.md`). A pattern
 anchored with `^~/…` matches only the first. Since patterns are matched
@@ -123,9 +140,12 @@ details.
 
 **How it works:**
 
-- A `PreToolUse` hook intercepts Write, Edit, Update, and the Obsidian MCP
+- A `PreToolUse` hook intercepts `Write` and the Obsidian MCP
   create/patch/append tools before they run
+- **Whole-file writes only.** `Edit` sends `old_string`/`new_string` rather
+  than `content`, so the hook cannot act on it and exits immediately
 - Only processes `.md` files
+- Leaves `---` rules alone unless `strip_horizontal_rules` is set true
 - Only runs when armed on that machine (opt-in — see [hooks/README.md](hooks/README.md))
 - Only active if markdown-fixer is on `PATH`
 
@@ -135,7 +155,7 @@ details.
 |--------|----------|---------|
 | **Slash commands** | Quick, specific operations | `/fix-markdown README.md` |
 | **Skill** | Complex workflows, AI-guided | "Fix all docs but show me changes first" |
-| **Auto-fix hook** | Automatic, hands-off | Edit file → auto-fixed |
+| **Auto-fix hook** | Automatic, hands-off | Write a new file → auto-fixed (edits are not) |
 | **Manual CLI** | One-off, custom commands | `markdown-fixer *.md -i` |
 
 ## Troubleshooting
