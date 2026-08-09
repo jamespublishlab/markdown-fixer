@@ -120,16 +120,71 @@ class TestGates:
         assert code == 0
         assert out == ""
 
+    def test_recursion_error_from_json_load_exits_zero(self, home, monkeypatch):
+        """run()'s docstring promises "Always returns 0". json.load() raises
+        RecursionError -- not ValueError or OSError -- on deeply nested input,
+        so a narrow except clause would let it escape uncaught.
+
+        Forced rather than provoked: raising directly tests the contract on
+        every interpreter, instantly, instead of depending on whatever the
+        current recursion limit happens to be."""
+        write_config(home, {"hook_enabled": True})
+
+        def boom(*_a, **_kw):
+            raise RecursionError("maximum recursion depth exceeded")
+
+        monkeypatch.setattr(hookmod.json, "load", boom)
+        code, out = run_hook(payload("/tmp/x.md"))
+        assert code == 0
+        assert out == ""
+
     def test_pathologically_deep_json_exits_zero(self, home):
-        """json.load() raises RecursionError (not ValueError/OSError) on
-        deeply nested input. run()'s docstring promises "Always returns 0";
-        a narrow except clause would let this escape uncaught."""
+        """The realistic counterpart to the forced test above.
+
+        The precondition matters: `[[[...]]]` that PARSES yields a list, which
+        the hook rejects at the isinstance(dict) check and returns 0 for with
+        no output -- identical to the RecursionError outcome. Without asserting
+        that json actually raises, this test would pass whether or not the path
+        under test is reached at all."""
         write_config(home, {"hook_enabled": True})
         depth = 200_000
         deeply_nested = "[" * depth + "]" * depth
+
+        try:
+            json.loads(deeply_nested)
+        except RecursionError:
+            pass
+        else:
+            pytest.skip("this interpreter parses the input without recursing")
+
         code, out = run_hook(deeply_nested)
         assert code == 0
         assert out == ""
+
+    def test_broken_pipe_on_write_exits_zero(self, home, monkeypatch):
+        """The consumer can close the pipe before the hook writes its output.
+
+        json.dump then raises BrokenPipeError mid-write. run() must still
+        return 0: an exception here would surface as a hook failure on a write
+        that was otherwise fine."""
+        write_config(home, {"hook_enabled": True})
+
+        def boom(*_a, **_kw):
+            raise BrokenPipeError(32, "Broken pipe")
+
+        monkeypatch.setattr(hookmod.json, "dump", boom)
+        # DIRTY is rewritten by the fixer, so the dump path is genuinely reached
+        code, out = run_hook(payload("/tmp/x.md", content=DIRTY))
+        assert code == 0
+        assert out == ""
+
+    def test_the_broken_pipe_test_reaches_the_dump(self, home):
+        """Guard for the test above: if DIRTY ever stopped being rewritten,
+        the hook would return early and that test would pass vacuously."""
+        write_config(home, {"hook_enabled": True})
+        code, out = run_hook(payload("/tmp/x.md", content=DIRTY))
+        assert code == 0
+        assert out, "DIRTY no longer triggers a rewrite; the BrokenPipe test is now vacuous"
 
 
 class TestExclusions:
