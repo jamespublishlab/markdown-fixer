@@ -54,9 +54,18 @@ class MarkdownFixer:
         Initialize the markdown fixer.
 
         Args:
-            config: Optional configuration dict (reserved for future use)
+            config: Optional configuration dict. Recognised keys:
+                strip_horizontal_rules (bool, default True) -- remove `---`,
+                    `***` and `___` rules from the body. Defaults True so the
+                    library and CLI are unchanged, but the automatic write
+                    paths (the PreToolUse hook and the MCP server) pass False
+                    unless the machine config opts in: removing a rule is a
+                    structural edit to a document the caller did not hand over
+                    for reformatting, and it silently breaks formats that use
+                    `---` as a section separator.
         """
         self.config = config or {}
+        self.strip_horizontal_rules = self.config.get("strip_horizontal_rules", True)
 
     def fix_file(
         self, filepath: str, in_place: bool = True, output_path: Optional[str] = None
@@ -142,8 +151,9 @@ class MarkdownFixer:
         while i < len(lines):
             line = lines[i]
 
-            # Skip horizontal rules (remove them, but maintain spacing)
-            if not in_code_block and self._is_horizontal_rule(line):
+            # Skip horizontal rules (remove them, but maintain spacing).
+            # Gated: see strip_horizontal_rules in __init__.
+            if self.strip_horizontal_rules and not in_code_block and self._is_horizontal_rule(line):
                 # Add a blank line if we're not already at a blank line
                 # This maintains document structure when rules are removed
                 if result and result[-1].strip():

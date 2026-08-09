@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `strip_horizontal_rules` config key. Gates removal of `---`, `***` and `___` rules. **Defaults to `false` on the hook and MCP server** — the automatic write paths — because removing a rule is a structural edit to a document handed to another tool, not to the formatter, and it silently breaks formats that use rules as section separators. The CLI and library keep the previous behaviour (rules stripped), since there the reformatting is what you explicitly asked for.
+- `doctor` now reports the resolved rule-stripping state, so "why did my `---` survive / vanish?" is answerable.
+
+### Changed
+- **Recommended `PreToolUse` matcher narrowed to `^Write$|^mcp__obsidian-mcp-tools__(create|patch|append).*$`.** `Edit` and `Update` were listed and both were dead: the hook reads new content from `tool_input.content`, and `Edit` sends `old_string`/`new_string` instead, so it exits immediately and can never rewrite an edit — while `Update` is not a Claude Code tool at all. Editing an existing markdown file was never auto-fixed; the matcher advertised otherwise. The unanchored form also matched `NotebookEdit`, which would have routed notebook JSON through a markdown fixer.
+
+### Documentation
+- Both Claude Code integration READMEs now state the whole-file-writes-only limit explicitly rather than implying edits are covered.
+
 ## [1.1.0] - 2026-08-08
 
 ### Added

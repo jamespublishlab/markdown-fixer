@@ -103,6 +103,12 @@ def report(stdout=None):
             lines.append(f"{label} {pattern.raw}   {status}   [{pattern.source}]")
             label = "            "
 
+    # This changes what the hook does to every file it touches, so it belongs
+    # in the report -- otherwise the one diagnostic tool cannot answer
+    # "why did my --- survive / vanish?".
+    rules = "stripped" if cfg.strip_horizontal_rules else "preserved"
+    lines.append(f"horizontal rules   {rules}   [strip_horizontal_rules]")
+
     lines.append("")
     lines.append("note         doctor sees THIS shell's PATH. Hooks and MCP servers inherit")
     lines.append(f"             their parent process's environment instead. {HOOK_ENV_VAR},")

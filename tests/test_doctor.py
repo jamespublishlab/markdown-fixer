@@ -221,3 +221,26 @@ class TestArmingSourceEnvClassification:
         _, text = report_text()
         assert "NOT ARMED" in text
         assert "unrecognised" in text
+
+
+class TestStripHorizontalRulesReporting:
+    """doctor must surface the rule-stripping setting.
+
+    It changes what the hook does to every file it touches, so leaving it out
+    of the report would mean the one diagnostic tool cannot answer "why did my
+    `---` survive / vanish?".
+    """
+
+    def test_reports_preserved_by_default(self, home):
+        write_config(home, {"hook_enabled": True})
+        code, text = report_text()
+        assert code == 0
+        assert "horizontal rules" in text
+        assert "preserved" in text
+
+    def test_reports_stripped_when_opted_in(self, home):
+        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": True})
+        code, text = report_text()
+        assert code == 0
+        assert "horizontal rules" in text
+        assert "stripped" in text

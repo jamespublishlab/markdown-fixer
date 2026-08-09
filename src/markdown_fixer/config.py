@@ -7,13 +7,21 @@ Config lives at $XDG_CONFIG_HOME/markdown-fixer/config.json, falling back to
 
     {
       "hook_enabled": true,
-      "exclude_patterns": ["(^|/)(Daily|Weekly)/"]
+      "exclude_patterns": ["(^|/)(Daily|Weekly)/"],
+      "strip_horizontal_rules": false
     }
 
 The config file — not settings.json — is the durable arming signal, so the
 Claude Code hook line can stay byte-identical on every machine.
 
-Write patterns to match every path shape the hook can see: Write/Edit supply
+strip_horizontal_rules defaults to False here, the opposite of the library and
+CLI default. The hook and MCP server rewrite documents the user handed to
+another tool, not to the formatter, so removing a `---` is a structural edit
+they did not ask for -- and it silently breaks any format using rules as
+section separators. Explicit CLI invocation is different: there the
+reformatting is the request.
+
+Write patterns to match every path shape the hook can see: Write supplies
 an absolute path, but the Obsidian MCP tools supply a path relative to the
 vault root instead (e.g. "Daily/x.md", not "/Users/you/.../Daily/x.md"). A
 pattern anchored with "^~/..." matches only the absolute form. is_excluded()
@@ -72,6 +80,7 @@ class Config:
     path: Optional[Path] = None
     hook_enabled: bool = False
     raw_patterns: List[str] = field(default_factory=list)
+    strip_horizontal_rules: bool = False
     malformed: bool = False
 
 
@@ -140,10 +149,23 @@ def load_config():
             )
             return Config(path=path, malformed=True)
 
+    # Absent means False: not stripping is the safe direction, and a bad value
+    # here cannot shrink protection the way a bad exclude_patterns entry can,
+    # so it warns and falls back rather than marking the config malformed.
+    strip_rules = data.get("strip_horizontal_rules", False)
+    if not isinstance(strip_rules, bool):
+        print(
+            f"markdown-fixer: config {path}: strip_horizontal_rules must be true or "
+            f"false, got {type(strip_rules).__name__}; treating it as false",
+            file=sys.stderr,
+        )
+        strip_rules = False
+
     return Config(
         path=path,
         hook_enabled=data.get("hook_enabled") is True,
         raw_patterns=list(exclude_patterns),
+        strip_horizontal_rules=strip_rules,
     )
 
 

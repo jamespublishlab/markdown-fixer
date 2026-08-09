@@ -57,7 +57,9 @@ def run(stdin=None, stdout=None):
     try:
         from .core import MarkdownFixer
 
-        cleaned = MarkdownFixer().fix_string(content)
+        cleaned = MarkdownFixer({"strip_horizontal_rules": cfg.strip_horizontal_rules}).fix_string(
+            content
+        )
     except Exception:  # noqa: BLE001
         # Any failure passes the write through untouched.
         return 0

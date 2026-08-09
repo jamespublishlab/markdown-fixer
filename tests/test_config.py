@@ -256,3 +256,44 @@ class TestExclusion:
         assert [p.raw for p in patterns] == ["^~/Daily/", "/vendor/"]
         assert f"{cfgmod.PATTERNS_ENV_VAR}[1]" in captured.err
         assert captured.out == ""
+
+
+class TestStripHorizontalRules:
+    """`strip_horizontal_rules` gates rule removal on the automatic paths.
+
+    Absent means False -- the safe direction. Removing a rule is a structural
+    edit to a document the user did not hand over for reformatting, and the
+    `_wip/` exclusion existed solely to work around it being unconditional.
+    """
+
+    def test_absent_defaults_to_false(self, home):
+        write_config(home, {"hook_enabled": True})
+        assert cfgmod.load_config().strip_horizontal_rules is False
+
+    def test_true_is_honoured(self, home):
+        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": True})
+        assert cfgmod.load_config().strip_horizontal_rules is True
+
+    def test_false_is_honoured(self, home):
+        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": False})
+        assert cfgmod.load_config().strip_horizontal_rules is False
+
+    def test_no_config_file_defaults_to_false(self, home):
+        assert cfgmod.load_config().strip_horizontal_rules is False
+
+    def test_non_bool_warns_and_falls_back_to_false(self, home, capsys):
+        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": "yes"})
+        cfg = cfgmod.load_config()
+        assert cfg.strip_horizontal_rules is False
+        assert "strip_horizontal_rules" in capsys.readouterr().err
+
+    def test_non_bool_does_not_mark_the_config_malformed(self, home):
+        """Unlike exclude_patterns, a bad value here cannot shrink protection.
+
+        It falls back to the safe direction, so disarming the hook over it
+        would punish a typo harder than a wholly unparseable value is.
+        """
+        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": 1})
+        cfg = cfgmod.load_config()
+        assert cfg.malformed is False
+        assert cfgmod.is_armed(cfg) is True

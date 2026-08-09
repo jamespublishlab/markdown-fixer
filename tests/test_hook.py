@@ -201,3 +201,38 @@ class TestOutputShape:
         write_config(home, {"hook_enabled": True})
         _, out = run_hook(payload(home / "doc.md"))
         assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == "allow"
+
+
+class TestHorizontalRuleGating:
+    """The hook must not strip `---` unless the machine config opts in.
+
+    This is why `_wip/` had to be excluded before: the WIP format uses `---`
+    both as a section separator and as an edit anchor, so unconditional
+    removal silently broke it.
+    """
+
+    RULED = "Section one\n\n---\n\n- a\n- b\nTrailing text"
+
+    def test_default_config_preserves_rules(self, home, tmp_path):
+        write_config(home, {"hook_enabled": True})
+        code, out = run_hook(payload(tmp_path / "note.md", content=self.RULED))
+        assert code == 0
+        assert out, "hook should still fire (the list spacing needs fixing)"
+        cleaned = json.loads(out)["hookSpecificOutput"]["updatedInput"]["content"]
+        assert "\n---\n" in cleaned, "rule was stripped despite the safe default"
+        assert "- a" in cleaned and "Trailing text" in cleaned
+
+    def test_opt_in_true_strips_rules(self, home, tmp_path):
+        write_config(home, {"hook_enabled": True, "strip_horizontal_rules": True})
+        code, out = run_hook(payload(tmp_path / "note.md", content=self.RULED))
+        assert code == 0
+        cleaned = json.loads(out)["hookSpecificOutput"]["updatedInput"]["content"]
+        assert "\n---\n" not in cleaned, "opt-in did not re-enable stripping"
+
+    def test_rule_only_change_is_now_a_no_op(self, home, tmp_path):
+        """A file whose ONLY 'problem' was a rule must pass through untouched."""
+        write_config(home, {"hook_enabled": True})
+        src = "Above the rule.\n\n---\n\nBelow the rule.\n"
+        code, out = run_hook(payload(tmp_path / "note.md", content=src))
+        assert code == 0
+        assert out == "", "hook rewrote a file it no longer needs to change"

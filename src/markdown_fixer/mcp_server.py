@@ -12,6 +12,7 @@ import logging
 from typing import Any, Dict
 
 from .__version__ import __version__
+from .config import load_config
 from .core import MarkdownFixer
 
 # Set up logging
@@ -27,7 +28,10 @@ class MarkdownFixerMCPServer:
     """MCP Server for markdown-fixer."""
 
     def __init__(self):
-        self.fixer = MarkdownFixer()
+        # Like the hook, this is an automatic write path: it rewrites documents
+        # the user handed to another tool, not to the formatter. So it honours
+        # the machine config's strip_horizontal_rules, which defaults to False.
+        self.fixer = MarkdownFixer({"strip_horizontal_rules": load_config().strip_horizontal_rules})
         self.server_info = {"name": "markdown-fixer", "version": __version__}
 
     def handle_request(self, request: Any) -> Dict[str, Any]:

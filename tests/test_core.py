@@ -416,9 +416,7 @@ More text"""
         """Regression test: prose with a bold lead-in and an unrelated
         colon later in the sentence must pass through unchanged, not be
         treated as field metadata and lose the text between them."""
-        input_md = (
-            "**Required fix.** Rebase Task 5b on this: the accessor is X."
-        )
+        input_md = "**Required fix.** Rebase Task 5b on this: the accessor is X."
 
         fixer = MarkdownFixer()
         result = fixer.fix_string(input_md)
@@ -959,3 +957,50 @@ class TestFileOperations:
 
         assert result_path == str(output_file)
         assert output_file.exists()
+
+
+class TestHorizontalRuleGating:
+    """`strip_horizontal_rules` gates the rule removal.
+
+    The library default stays True so existing callers and the CLI are
+    unchanged. The automatic write paths (hook, MCP server) pass False unless
+    the machine config opts in -- removing a rule is a structural edit to a
+    document the user did not hand over for reformatting, and it silently
+    breaks formats that use `---` as a section separator.
+    """
+
+    SAMPLE = "First section\n---\nSecond section"
+
+    def test_default_still_removes(self):
+        """Unchanged behaviour for MarkdownFixer() with no config."""
+        result = MarkdownFixer().fix_string(self.SAMPLE)
+        assert "---" not in result
+        assert "First section" in result and "Second section" in result
+
+    def test_explicit_true_removes(self):
+        result = MarkdownFixer({"strip_horizontal_rules": True}).fix_string(self.SAMPLE)
+        assert "---" not in result
+
+    def test_false_preserves_the_rule(self):
+        result = MarkdownFixer({"strip_horizontal_rules": False}).fix_string(self.SAMPLE)
+        assert "\n---\n" in result
+        assert "First section" in result and "Second section" in result
+
+    def test_false_preserves_asterisk_and_underscore_rules(self):
+        for rule in ("***", "___", "- - -"):
+            src = f"Above\n{rule}\nBelow"
+            result = MarkdownFixer({"strip_horizontal_rules": False}).fix_string(src)
+            assert rule in result, f"{rule!r} was removed despite gating off"
+
+    def test_false_still_preserves_frontmatter(self):
+        src = "---\nstatus: active\n---\n\nBody text here.\n\n---\n\nAfter the rule.\n"
+        result = MarkdownFixer({"strip_horizontal_rules": False}).fix_string(src)
+        assert result.startswith("---\nstatus: active\n---")
+        # the body rule survives too, so the document keeps 3 rule lines
+        assert len([ln for ln in result.splitlines() if ln.strip() == "---"]) == 3
+
+    def test_false_does_not_disable_other_fixes(self):
+        """Gating rules off must not turn the fixer into a no-op."""
+        src = "Intro\n- a\n- b\n"
+        result = MarkdownFixer({"strip_horizontal_rules": False}).fix_string(src)
+        assert "Intro\n\n- a" in result, "list spacing fix should still apply"
