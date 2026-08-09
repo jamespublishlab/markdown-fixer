@@ -94,7 +94,18 @@ hygiene only — anything that restructures or deletes visible content is opt-in
 The CLI and the MCP tools are direct requests to reformat, so they run
 everything. Setting a key in the config applies it to every surface.
 
-Run `markdown-fixer doctor` to see how each fix resolves on each surface.
+**Setting a key in the config applies it everywhere.** To change the hook
+*only*, set `MARKDOWN_FIXER_FIXES` on the hook's own command line — an env var
+exists only in that process, so it cannot bleed into your CLI:
+
+```json
+"command": "command -v markdown-fixer >/dev/null 2>&1 && MARKDOWN_FIXER_FIXES='{\"reflow_tables\": true}' markdown-fixer hook claude-code || true"
+```
+
+Precedence is `surface default < config file (global) < env var (per-process)`.
+
+Run `markdown-fixer doctor` to see how each fix resolves on each surface and
+which layer it came from.
 
 or with the environment variable `MARKDOWN_FIXER_HOOK=1`. Setting
 `MARKDOWN_FIXER_HOOK=0` forces it off regardless of the config file. Run

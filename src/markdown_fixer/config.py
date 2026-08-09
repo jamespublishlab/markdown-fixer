@@ -24,8 +24,18 @@ its own default:
   cli/mcp   `markdown-fixer file.md`, and the MCP tools ("fix this markdown").
             Both are direct requests to reformat, so they run everything.
 
-Run `markdown-fixer doctor` to see how each fix resolves on each surface, and
-whether it came from the config or a default.
+MARKDOWN_FIXER_FIXES is the per-surface layer. The config file is global by
+design, which leaves no way to tune one surface -- so a JSON object in that
+env var overrides it, and because an env var exists only in the process that
+has it set, putting it on the hook's command line in settings.json tunes the
+hook alone:
+
+    MARKDOWN_FIXER_FIXES='{"reflow_tables": true}' markdown-fixer hook claude-code
+
+Precedence: surface default < config file (global) < env var (per-process).
+
+Run `markdown-fixer doctor` to see how each fix resolves on each surface and
+which layer it came from.
 
 Write patterns to match every path shape the hook can see: Write supplies
 an absolute path, but the Obsidian MCP tools supply a path relative to the
@@ -57,6 +67,11 @@ from typing import Pattern as RePattern
 
 HOOK_ENV_VAR = "MARKDOWN_FIXER_HOOK"
 PATTERNS_ENV_VAR = "MARKDOWN_FIXER_EXCLUDE_PATTERNS"
+# Per-surface fix overrides, as a JSON object. Unlike the config file --
+# which is global by design -- this exists only in the process that has it
+# set, so putting it on the hook's command line in settings.json tunes the
+# hook alone and cannot bleed into the CLI.
+FIXES_ENV_VAR = "MARKDOWN_FIXER_FIXES"
 # Not ours, but it decides which config file exists at all, so it belongs in
 # any report about where the config came from.
 CONFIG_HOME_ENV_VAR = "XDG_CONFIG_HOME"
@@ -239,6 +254,57 @@ def load_config():
     )
 
 
+def env_fix_overrides():
+    """Parse FIXES_ENV_VAR as a JSON object of {fix_name: bool}. Never raises.
+
+    A bad entry warns and is skipped rather than discarding the whole value,
+    and a wholly unparseable value is ignored entirely. Nothing here can
+    disarm the hook: these toggles cannot shrink the exclusion set, so the
+    fail-closed rule that governs exclude_patterns does not apply.
+    """
+    raw = os.environ.get(FIXES_ENV_VAR)
+    if not raw:
+        return {}
+
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        print(f"markdown-fixer: {FIXES_ENV_VAR} is not valid JSON: {exc}", file=sys.stderr)
+        return {}
+
+    if not isinstance(data, dict):
+        print(f"markdown-fixer: {FIXES_ENV_VAR} must be a JSON object", file=sys.stderr)
+        return {}
+
+    overrides = {}
+    for name, value in data.items():
+        if name not in FIX_DEFAULTS_HOOK:
+            print(
+                f"markdown-fixer: {FIXES_ENV_VAR}: unknown fix {name!r}; ignoring it. "
+                f"Known fixes: {', '.join(FIX_KEYS)}",
+                file=sys.stderr,
+            )
+            continue
+        if not isinstance(value, bool):
+            print(
+                f"markdown-fixer: {FIXES_ENV_VAR}: {name} must be true or false, got "
+                f"{type(value).__name__}; ignoring it",
+                file=sys.stderr,
+            )
+            continue
+        overrides[name] = value
+    return overrides
+
+
+def fix_sources(cfg):
+    """Where each fix's value came from: "default", "config" or "env"."""
+    env = env_fix_overrides()
+    return {
+        name: "env" if name in env else ("config" if name in cfg.fix_overrides else "default")
+        for name in FIX_KEYS
+    }
+
+
 def fix_options(cfg, surface):
     """The MarkdownFixer config dict for one surface.
 
@@ -249,7 +315,8 @@ def fix_options(cfg, surface):
         defaults = SURFACES[surface]
     except KeyError:
         raise ValueError(f"unknown surface {surface!r}; expected one of {sorted(SURFACES)}")
-    return {**defaults, **cfg.fix_overrides}
+    # Precedence: surface default < config file (global) < env var (per-process).
+    return {**defaults, **cfg.fix_overrides, **env_fix_overrides()}
 
 
 def _env_flag(name):

@@ -22,6 +22,7 @@ def home(tmp_path, monkeypatch):
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
     monkeypatch.delenv(cfgmod.HOOK_ENV_VAR, raising=False)
     monkeypatch.delenv(cfgmod.PATTERNS_ENV_VAR, raising=False)
+    monkeypatch.delenv(cfgmod.FIXES_ENV_VAR, raising=False)
     return tmp_path
 
 
@@ -427,3 +428,85 @@ class TestPerSurfaceDefaults:
         cfg = cfgmod.load_config()
         assert cfg.fix_overrides == {}
         assert cfgmod.fix_options(cfg, "explicit")["reflow_tables"] is True
+
+
+class TestFixesEnvVar:
+    """MARKDOWN_FIXER_FIXES is the per-SURFACE layer.
+
+    The config file is global by design -- a key there applies everywhere.
+    That leaves no way to tune one surface, which is exactly what an env var
+    set on the hook's own command line in settings.json provides: it exists
+    only in that process, so it cannot bleed into the CLI.
+
+    Precedence: surface default < config file < env var.
+    """
+
+    def test_env_overrides_the_surface_default(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"reflow_tables": true}')
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["reflow_tables"] is True
+
+    def test_env_beats_the_config_file(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True, "reflow_tables": False})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"reflow_tables": true}')
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["reflow_tables"] is True
+        assert cfgmod.fix_options(cfg, "explicit")["reflow_tables"] is True
+
+    def test_untouched_keys_keep_their_surface_default(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"reflow_tables": true}')
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["bullet_field_metadata"] is False
+        assert cfgmod.fix_options(cfg, "explicit")["bullet_field_metadata"] is True
+
+    def test_sources_report_the_winning_layer(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True, "bullet_field_metadata": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"reflow_tables": true}')
+        src = cfgmod.fix_sources(cfgmod.load_config())
+        assert src["reflow_tables"] == "env"
+        assert src["bullet_field_metadata"] == "config"
+        assert src["collapse_blank_runs"] == "default"
+
+    # --- bad input never disarms and never blocks ------------------------
+    def test_invalid_json_warns_and_is_ignored(self, home, monkeypatch, capsys):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, "{not json")
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["reflow_tables"] is False
+        assert cfgmod.FIXES_ENV_VAR in capsys.readouterr().err
+
+    def test_non_object_warns_and_is_ignored(self, home, monkeypatch, capsys):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '["reflow_tables"]')
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["reflow_tables"] is False
+        assert "JSON object" in capsys.readouterr().err
+
+    def test_unknown_key_warns_and_is_skipped(self, home, monkeypatch, capsys):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"no_such_fix": true, "reflow_tables": true}')
+        cfg = cfgmod.load_config()
+        assert (
+            cfgmod.fix_options(cfg, "hook")["reflow_tables"] is True
+        ), "good key dropped with the bad"
+        assert "no_such_fix" in capsys.readouterr().err
+
+    def test_non_bool_value_warns_and_is_skipped(self, home, monkeypatch, capsys):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"reflow_tables": "yes"}')
+        cfg = cfgmod.load_config()
+        assert cfgmod.fix_options(cfg, "hook")["reflow_tables"] is False
+        assert "reflow_tables" in capsys.readouterr().err
+
+    def test_empty_and_unset_are_both_no_ops(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True})
+        for value in ("", "{}"):
+            monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, value)
+            assert cfgmod.fix_sources(cfgmod.load_config())["reflow_tables"] == "default"
+
+    def test_a_bad_value_never_disarms_the_hook(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, "garbage")
+        assert cfgmod.is_armed(cfgmod.load_config()) is True

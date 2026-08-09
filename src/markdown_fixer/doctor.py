@@ -18,6 +18,8 @@ from .__version__ import __version__
 from .config import (
     FIX_KEYS,
     fix_options,
+    fix_sources,
+    FIXES_ENV_VAR,
     CONFIG_HOME_ENV_VAR,
     HOOK_ENV_VAR,
     PATTERNS_ENV_VAR,
@@ -110,10 +112,11 @@ def report(stdout=None):
     # "why did my --- survive here but vanish there?".
     hook_opts = fix_options(cfg, "hook")
     cli_opts = fix_options(cfg, "explicit")
+    sources = fix_sources(cfg)
     lines.append("")
     lines.append(f"fixes        {'':<26} {'hook':<6} {'cli/mcp':<8} source")
     for name in FIX_KEYS:
-        source = "config" if name in cfg.fix_overrides else "default"
+        source = sources[name]
         lines.append(
             f"             {name:<26} "
             f"{('on' if hook_opts[name] else 'off'):<6} "
@@ -123,7 +126,8 @@ def report(stdout=None):
     lines.append("")
     lines.append("note         doctor sees THIS shell's PATH. Hooks and MCP servers inherit")
     lines.append(f"             their parent process's environment instead. {HOOK_ENV_VAR},")
-    lines.append(f"             {PATTERNS_ENV_VAR}, PATH, and {CONFIG_HOME_ENV_VAR} may all")
+    lines.append(f"             {PATTERNS_ENV_VAR}, {FIXES_ENV_VAR}, PATH, and")
+    lines.append(f"             {CONFIG_HOME_ENV_VAR} may all")
     lines.append(f"             differ there -- and {CONFIG_HOME_ENV_VAR} decides which config")
     lines.append("             file is read, so a hook can be reading a different config")
     lines.append("             than the one reported above.")

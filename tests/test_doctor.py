@@ -17,6 +17,7 @@ def home(tmp_path, monkeypatch):
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
     monkeypatch.delenv(cfgmod.HOOK_ENV_VAR, raising=False)
     monkeypatch.delenv(cfgmod.PATTERNS_ENV_VAR, raising=False)
+    monkeypatch.delenv(cfgmod.FIXES_ENV_VAR, raising=False)
     return tmp_path
 
 
@@ -257,3 +258,29 @@ class TestStripHorizontalRulesReporting:
         _, text = report_text()
         row = next(l for l in text.splitlines() if "reflow_tables" in l)
         assert "config" in row, f"override not attributed: {row!r}"
+
+
+class TestFixSourceReporting:
+    """doctor must name the layer each value came from.
+
+    With three layers (surface default, global config file, per-process env
+    var) "why is this on?" is otherwise unanswerable without reading source.
+    """
+
+    def test_env_override_is_attributed_to_env(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"reflow_tables": true}')
+        _, text = report_text()
+        row = next(l for l in text.splitlines() if "reflow_tables" in l)
+        assert "env" in row, f"env layer not attributed: {row!r}"
+
+    def test_env_row_shows_the_overridden_value_on_both_surfaces(self, home, monkeypatch):
+        write_config(home, {"hook_enabled": True})
+        monkeypatch.setenv(cfgmod.FIXES_ENV_VAR, '{"bullet_field_metadata": true}')
+        _, text = report_text()
+        row = next(l for l in text.splitlines() if "bullet_field_metadata" in l)
+        assert "off" not in row, f"env override not reflected in the values: {row!r}"
+
+    def test_note_mentions_the_fixes_env_var(self, home):
+        _, text = report_text()
+        assert cfgmod.FIXES_ENV_VAR in text, "doctor's env note omits the new var"

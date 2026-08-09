@@ -25,6 +25,7 @@ def home(tmp_path, monkeypatch):
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
     monkeypatch.delenv(cfgmod.HOOK_ENV_VAR, raising=False)
     monkeypatch.delenv(cfgmod.PATTERNS_ENV_VAR, raising=False)
+    monkeypatch.delenv(cfgmod.FIXES_ENV_VAR, raising=False)
     return tmp_path
 
 
